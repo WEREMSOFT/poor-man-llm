@@ -7,15 +7,10 @@
 
 typedef struct array_t
 {
-    int length;
-	int capacity;
-    int elementSize;
+    long length;
+	long capacity;
+    size_t elementSize;
     void* data;
-	void (*append_element)(struct array_t* that, void *element);
-	void (*insert_element_at)(struct array_t* that, void *element, int index);
-	void* (*get_element_at)(struct array_t that, int index);
-	void (*delete_element_at)(struct array_t *that, int index);
-	void (*concatenate)(struct array_t* that, struct array_t from);
 } array_t;
 
 
@@ -25,6 +20,8 @@ void array_insert_element_at(struct array_t *that, void *element, int index);
 void *array_get_element_at(array_t that, int index);
 void array_delete_element_at(struct array_t *that, int index);
 void array_concatenate(struct array_t *that, struct array_t src);
+int array_save_to_disk(array_t array, char* file_name);
+array_t array_load_from_disk(char* file_name);
 
 #ifndef ARRAY_MALLOC
 #define ARRAY_MALLOC malloc
@@ -55,12 +52,49 @@ array_t array_create(int initialCapacity, size_t elementSize)
     }
 
 	memset(array.data, 0, size);
-	array.append_element = array_append_element;
-	array.insert_element_at = array_insert_element_at;
-	array.get_element_at = array_get_element_at;
-	array.delete_element_at = array_delete_element_at;
-	array.concatenate = array_concatenate;
+
     return array;
+}
+
+int array_save_to_disk(array_t array, char* file_name)
+{
+	FILE *fp = fopen(file_name, "w+");
+
+	if(!fp)
+	{
+		printf("Error trying to save array to file %s\n", file_name);
+		return -1;
+	}
+
+	fwrite(&array, sizeof(array_t), 1, fp);
+	fwrite(array.data, array.elementSize ,array.length, fp);
+	fclose(fp);
+
+	return 0;
+}
+
+array_t array_load_from_disk(char* file_name)
+{
+	array_t array = {0};
+	
+	FILE *fp = fopen(file_name, "r");
+
+	if(!fp)
+	{
+		printf("Error trying to load array to file %s\n", file_name);
+		return array;
+	}
+
+
+	fread(&array, sizeof(array_t), 1, fp);
+
+	array.data = ARRAY_MALLOC(array.elementSize * array.capacity);
+
+	fread(array.data, array.elementSize, array.capacity, fp);
+
+	fclose(fp);
+
+	return array;
 }
 
 void array_append_element(array_t *that, void *element)
@@ -136,7 +170,7 @@ void array_concatenate(struct array_t *that, struct array_t src)
 	int i;
 	for(i = 0; i < src.length; i++)
 	{
-		that->append_element(that, (char *)src.data + i);
+		array_append_element(that, (char *)src.data + i);
 	}
 }
 

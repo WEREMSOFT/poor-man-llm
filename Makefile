@@ -11,3 +11,8 @@ clean:
 	rm -f *.o
 	rm -f *.bin
 	rm -f *.out
+
+clean_data:
+	rm -rf model_data
+	mkdir model_data
+	

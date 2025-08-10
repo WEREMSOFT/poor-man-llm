@@ -16,76 +16,43 @@ void print_words(array_t tokens, array_t token_index);
 array_t build_token_graph(array_t tokens, array_t token_index);
 void generate_phrase(array_t word_graph, char* initial_word, array_t tokens);
 node_t* find_word(char* word, array_t word_graph, array_t tokens);
+void generate_tokens(array_t* tokens, array_t* token_index);
+void print_graph(array_t graph, array_t tokens);
 
 int main(void)
 {
-	struct stat sb;
-	char *file_content;
-	long i, temp_index;
-
-	bool first_char = true;
-	char null_char = 0;
-	array_t token_graph;
-
+	array_t token_graph = {0};
+	array_t tokens = {0};	
+	array_t token_index = {0};
+	node_t *node_temp;
+	char file_name[500] = {0};
+	long i;
 	
-	
-	array_t tokens = array_create(1000, sizeof(char));
-	array_t token_index = array_create(1000, sizeof(long));
-	
-	int fd = open("libro.txt", O_RDONLY);
+	tokens = array_load_from_disk("model_data/tokens.arr");
+	token_index = array_load_from_disk("model_data/token_index.arr");
 
-	if(fd == -1)
+	if(tokens.length == 0 || token_index.length == 0)
 	{
-		perror("Error al abrir archivo\n");
-		return 1;
+		generate_tokens(&tokens, &token_index);
 	}
 
-	if(fstat(fd, &sb) == -1)
-	{
-		perror("error al obtener el tamanio del archivo\n");
-		close(fd);
-		return 1;
-	}
+	token_graph = array_load_from_disk("model_data/token_graph.arr");
 
-	file_content = (char *) mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-
-	if(file_content == MAP_FAILED)
+	if(token_graph.length != 0)
 	{
-		perror("error al mapear el archivo\n");
-		close(fd);
-		return 1;
-	}
-	
-	for(i = 0; i < sb.st_size; i++)
-	{
-		if(file_content[i] != 32 && file_content[i] != '\n' && file_content[i] != '\r' && file_content[i] != '.')
+		for( i = 0; i < token_graph.length; i++)
 		{
-			if(first_char)
-			{
-				temp_index = tokens.length;
-				array_append_element(&token_index, &temp_index);
-				first_char = false;
-			}
-				
-			array_append_element(&tokens, &file_content[i]);
-		} else {
-			first_char = true;
-
-			if(file_content[i] == '.')
-			{
-				array_append_element(&tokens, &null_char);
-				array_append_element(&tokens, &file_content[i]);
-				temp_index = tokens.length - 1;
-				array_append_element(&token_index, &temp_index);
-			}
-
-			array_append_element(&tokens, &null_char);
+			node_temp = array_get_element_at(token_graph, i);
+			sprintf(file_name, "model_data/token_graph_%ld.arr", i);
+			node_temp->children = array_load_from_disk(file_name);
 		}
 	}
 
-	token_graph = build_token_graph(tokens, token_index);
+	if(token_graph.length == 0)
+	{
+		token_graph = build_token_graph(tokens, token_index);
+	}
 
-	generate_phrase(token_graph, "The", tokens);
 	printf("\n");
 	generate_phrase(token_graph, "If", tokens);
 	printf("\n");
@@ -94,11 +61,96 @@ int main(void)
 	generate_phrase(token_graph, "Although", tokens);
 	printf("\n");
 	generate_phrase(token_graph, "Finally", tokens);
-
-	munmap(file_content, sb.st_size);
-	close(fd);
-		
+	
 	return 0;
+}
+
+void print_graph(array_t graph, array_t tokens)
+{
+	long i, j;
+	node_t *node, *child_node;
+	
+	for(i = 0; i < graph.length; i++)
+	{
+		node = array_get_element_at(graph, i);
+		printf("%s\n", &((char *)tokens.data)[node->token]);
+		for(j = 0; j < node->children.length; j++)
+		{
+			child_node = array_get_element_at(node->children, j);
+			printf("\t%s\n", &((char *)tokens.data)[child_node->token]);
+		}
+	}
+}
+
+void generate_tokens(array_t* tokens, array_t* token_index)
+{
+		char *file_content;
+		int fd;
+		long i, temp_index;
+		struct stat sb;
+		bool first_char = true;
+		char null_char = 0;
+	
+	
+		*tokens = array_create(1000, sizeof(char));
+		*token_index = array_create(1000, sizeof(long));
+		
+		fd = open("libro.txt", O_RDONLY);
+
+		if(fd == -1)
+		{
+			perror("Error al abrir archivo\n");
+			return;
+		}
+
+		if(fstat(fd, &sb) == -1)
+		{
+			perror("error al obtener el tamanio del archivo\n");
+			close(fd);
+			return;
+		}
+
+		file_content = (char *) mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+		if(file_content == MAP_FAILED)
+		{
+			perror("error al mapear el archivo\n");
+			close(fd);
+			return;
+		}
+		
+		for(i = 0; i < sb.st_size; i++)
+		{
+			if(file_content[i] != 32 && file_content[i] != '\n' && file_content[i] != '\r' && file_content[i] != '.')
+			{
+				if(first_char)
+				{
+					temp_index = tokens->length;
+					array_append_element(token_index, &temp_index);
+					first_char = false;
+				}
+					
+				array_append_element(tokens, &file_content[i]);
+			} else {
+				first_char = true;
+
+				if(file_content[i] == '.')
+				{
+					array_append_element(tokens, &null_char);
+					array_append_element(tokens, &file_content[i]);
+					temp_index = tokens->length - 1;
+					array_append_element(token_index, &temp_index);
+				}
+
+				array_append_element(tokens, &null_char);
+			}
+		}
+
+		array_save_to_disk(*tokens, "model_data/tokens.arr");		
+		array_save_to_disk(*token_index, "model_data/token_index.arr");
+		
+		munmap(file_content, sb.st_size);
+		close(fd);
 }
 
 void generate_phrase(array_t word_graph, char* initial_word, array_t tokens)
@@ -141,7 +193,7 @@ void print_words(array_t tokens, array_t token_index)
 		printf("%s\n", &((char *)tokens.data)[*index]);
 	}
 
-	printf("cantidad de palabras %d\n", token_index.length);
+	printf("cantidad de palabras %ld\n", token_index.length);
 }
 
 node_t* find_word(char* word, array_t word_graph, array_t tokens)
@@ -174,9 +226,11 @@ node_t* word_append_to_graph(array_t* word_graph, long *index)
 
 array_t build_token_graph(array_t tokens, array_t token_index)
 {
+	int i;
 	long current_word, *index, last_word_index;
 	array_t word_graph = {0};
-	node_t *last_word_node;
+	node_t *last_word_node, *node_temp;
+	char file_name[500] = {0};
 
 	word_graph = array_create(10, sizeof(node_t));
 	
@@ -203,5 +257,15 @@ array_t build_token_graph(array_t tokens, array_t token_index)
 		last_word_index = *index;
 	}
 
+	array_save_to_disk(word_graph, "model_data/token_graph.arr");
+
+	for( i = 0; i < word_graph.length; i++)
+	{
+		node_temp = array_get_element_at(word_graph, i);
+		sprintf(file_name, "model_data/token_graph_%d.arr", i);
+		array_save_to_disk(node_temp->children, file_name);	
+	}
+
 	return word_graph;	
 }
+ 
