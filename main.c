@@ -18,6 +18,7 @@ void generate_phrase(array_t word_graph, char* initial_word, array_t tokens);
 node_t* find_word(char* word, array_t word_graph, array_t tokens);
 void generate_tokens(array_t* tokens, array_t* token_index);
 void print_graph(array_t graph, array_t tokens);
+node_t* find_node_by_word_index(long word_index, array_t word_graph);
 
 int main(void)
 {
@@ -179,21 +180,27 @@ void generate_phrase(array_t word_graph, char* initial_word, array_t tokens)
 
 		random_index = rand() % last_word_node->children.length;
 		word_index = array_get_element_at(last_word_node->children, random_index);
-		last_word_node = find_word(&((char *)tokens.data)[*word_index], word_graph, tokens);
+		printf("\n#%s\n", (char*)&tokens.data[*word_index]);
+		/* last_word_node = find_word(&((char *)tokens.data)[*word_index], word_graph, tokens); */
+		last_word_node = find_node_by_word_index(*word_index, word_graph);
 	}
-	
 }
 
-void print_words(array_t tokens, array_t token_index)
+node_t* find_node_by_word_index(long word_index, array_t word_graph)
 {
-	long i, *index;
-	for(i = 0; i < token_index.length; i++)
-	{
-		index = (long *)array_get_element_at(token_index, i);
-		printf("%s\n", &((char *)tokens.data)[*index]);
-	}
+	long i;
+	node_t *element = NULL;
 
-	printf("cantidad de palabras %ld\n", token_index.length);
+	for(i = 0; i < word_graph.length; i++)
+	{
+		element = (node_t *)array_get_element_at(word_graph, i);
+		if(element->token == word_index)
+		{
+			return element;
+		}
+	}
+	
+	return NULL;
 }
 
 node_t* find_word(char* word, array_t word_graph, array_t tokens)
@@ -213,6 +220,19 @@ node_t* find_word(char* word, array_t word_graph, array_t tokens)
 	}
 	
 	return NULL;
+}
+
+
+void print_words(array_t tokens, array_t token_index)
+{
+	long i, *index;
+	for(i = 0; i < token_index.length; i++)
+	{
+		index = (long *)array_get_element_at(token_index, i);
+		printf("%s\n", &((char *)tokens.data)[*index]);
+	}
+
+	printf("cantidad de palabras %ld\n", token_index.length);
 }
 
 node_t* word_append_to_graph(array_t* word_graph, long *index)
