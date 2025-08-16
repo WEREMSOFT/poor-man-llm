@@ -225,12 +225,13 @@ node_t* word_append_to_graph(array_t* word_graph, long *index)
 
 array_t build_token_graph(array_t tokens, array_t token_index)
 {
-	int i;
+	int i, param_counter;
 	long current_word, last_word_index;
 	long index[NODE_NUM_PARAMS];
 	
 	array_t word_graph = {0};
-	node_t *last_word_node, *node_temp;
+	node_t *node_temp;
+	node_t* last_word_node[NODE_NUM_PARAMS];
 	char file_name[500] = {0};
 
 	word_graph = array_create(10, sizeof(node_t));
@@ -247,14 +248,16 @@ array_t build_token_graph(array_t tokens, array_t token_index)
 			continue;
 		}
 		/* find / add - add child  */
-		last_word_node = find_word(&((char *)tokens.data)[last_word_index], word_graph, tokens);
-
-		if(last_word_node == NULL)
+		for(param_counter = 0; param_counter < NODE_NUM_PARAMS; param_counter++)
 		{
-			last_word_node = word_append_to_graph(&word_graph, &last_word_index);
+			last_word_node[param_counter] = find_word(&((char *)tokens.data)[last_word_index], word_graph, tokens);
+			if(last_word_node[param_counter] == NULL)
+			{
+				last_word_node[param_counter] = word_append_to_graph(&word_graph, &last_word_index);
+			}
+			array_append_element(&last_word_node[param_counter]->children, index);
 		}
 
-		array_append_element(&last_word_node->children, index);
 		last_word_index = *index;
 	}
 
