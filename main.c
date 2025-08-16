@@ -73,11 +73,11 @@ void print_graph(array_t graph, array_t tokens)
 	for(i = 0; i < graph.length; i++)
 	{
 		node = array_get_element_at(graph, i);
-		printf("%s\n", &((char *)tokens.data)[node->token]);
+		printf("%s\n", &((char *)tokens.data)[node->token[0]]);
 		for(j = 0; j < node->children.length; j++)
 		{
 			child_node = array_get_element_at(node->children, j);
-			printf("\t%s\n", &((char *)tokens.data)[child_node->token]);
+			printf("\t%s\n", &((char *)tokens.data)[child_node->token[0]]);
 		}
 	}
 }
@@ -162,16 +162,16 @@ void generate_phrase(array_t word_graph, char* initial_word, array_t tokens)
 
 	while(last_word_node != NULL)
 	{
-		if(((char *)tokens.data)[last_word_node->token] != '.')
+		if(((char *)tokens.data)[last_word_node->token[0]] != '.')
 		{
 			printf(" ");
 		}
 
-		printf("%s", &((char *)tokens.data)[last_word_node->token]);
+		printf("%s", &((char *)tokens.data)[last_word_node->token[0]]);
 
 		if(last_word_node->children.length == 0) return;
 
-		if(((char *)tokens.data)[last_word_node->token] == '.')
+		if(((char *)tokens.data)[last_word_node->token[0]] == '.')
 		{
 			printf("\n");
 			return;
@@ -181,7 +181,6 @@ void generate_phrase(array_t word_graph, char* initial_word, array_t tokens)
 		word_index = array_get_element_at(last_word_node->children, random_index);
 		last_word_node = find_word(&((char *)tokens.data)[*word_index], word_graph, tokens);
 	}
-	
 }
 
 void print_words(array_t tokens, array_t token_index)
@@ -205,7 +204,7 @@ node_t* find_word(char* word, array_t word_graph, array_t tokens)
 	for(i = 0; i < word_graph.length; i++)
 	{
 		element = (node_t *)array_get_element_at(word_graph, i);
-		current_word =  &((char *)tokens.data)[element->token];
+		current_word =  &((char *)tokens.data)[element->token[0]];
 		if(strcmp(current_word, word) == 0)
 		{
 			return element;
@@ -219,7 +218,7 @@ node_t* word_append_to_graph(array_t* word_graph, long *index)
 {
 	node_t word_node = {0};
 	word_node = node_create();
-	word_node.token = *index;
+	word_node.token[0] = index[0];
 	array_append_element(word_graph, &word_node);
 	return array_get_element_at(*word_graph, word_graph->length - 1);
 }
@@ -227,19 +226,21 @@ node_t* word_append_to_graph(array_t* word_graph, long *index)
 array_t build_token_graph(array_t tokens, array_t token_index)
 {
 	int i;
-	long current_word, *index, last_word_index;
+	long current_word, last_word_index;
+	long index[NODE_NUM_PARAMS];
+	
 	array_t word_graph = {0};
 	node_t *last_word_node, *node_temp;
 	char file_name[500] = {0};
 
 	word_graph = array_create(10, sizeof(node_t));
 	
-	for(current_word = 0; current_word < token_index.length; current_word++)
+	for(current_word = 3; current_word < token_index.length; current_word++)
 	{
-		index = (long *)array_get_element_at(token_index, current_word);
+		index[0] = *(long *)array_get_element_at(token_index, current_word);
 
 		/* add  */
-		if(current_word == 0)
+		if(current_word == 3)
 		{
 			word_append_to_graph(&word_graph, index);
 			last_word_index = *index;
