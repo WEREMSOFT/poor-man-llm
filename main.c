@@ -80,7 +80,7 @@ void print_graph(array_t graph, array_t tokens)
 		{
 			printf("%s ", &((char *)tokens.data)[node->token[k]]);
 		}
-		printf("]/n");
+		printf("]\n");
 		
 		for(j = 0; j < node->children.length; j++)
 		{
@@ -231,16 +231,30 @@ node_t* word_append_to_graph(array_t* word_graph, long *index)
 	return array_get_element_at(*word_graph, word_graph->length - 1);
 }
 
+void save_graph_to_disk(array_t word_graph)
+{
+	int i;
+	node_t* node_temp;
+	char file_name[500];
+
+	array_save_to_disk(word_graph, "model_data/token_graph.arr");
+
+	for( i = 0; i < word_graph.length; i++)
+	{
+		node_temp = array_get_element_at(word_graph, i);
+		sprintf(file_name, "model_data/token_graph_%d.arr", i);
+		array_save_to_disk(node_temp->children, file_name);	
+	}
+}
+
 array_t build_token_graph(array_t tokens, array_t token_index)
 {
-	int i, param_counter;
+	int param_counter;
 	long current_word, last_word_index;
 	long index[NODE_NUM_PARAMS];
 	
 	array_t word_graph = {0};
-	node_t *node_temp;
 	node_t* last_word_node[NODE_NUM_PARAMS];
-	char file_name[500] = {0};
 
 	word_graph = array_create(10, sizeof(node_t));
 	
@@ -269,14 +283,7 @@ array_t build_token_graph(array_t tokens, array_t token_index)
 		last_word_index = *index;
 	}
 
-	array_save_to_disk(word_graph, "model_data/token_graph.arr");
-
-	for( i = 0; i < word_graph.length; i++)
-	{
-		node_temp = array_get_element_at(word_graph, i);
-		sprintf(file_name, "model_data/token_graph_%d.arr", i);
-		array_save_to_disk(node_temp->children, file_name);	
-	}
+	save_graph_to_disk(word_graph);
 
 	return word_graph;	
 }
