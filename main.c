@@ -224,17 +224,61 @@ array_t build_token_graph(array_t tokens, array_t token_index)
 	return word_graph;	
 }
 
+long get_dictionary_index(array_t* token_dictionary, array_t* dictionary_index,  char* token_string)
+{
+	long i, *dictionary_i, return_value;
+	char *dictionary_token_string;
+	for(i = 0; i < dictionary_index->length; i++)
+	{
+		dictionary_i = array_get_element_at(*dictionary_index, i);
+		dictionary_token_string = array_get_element_at(*token_dictionary, *dictionary_i);
+
+		if(strcmp(dictionary_token_string, token_string) == 0)
+		{
+			return *dictionary_i;
+		}
+		
+	}
+	return_value = token_dictionary->length;
+	array_append_element(dictionary_index, &return_value);
+	while(*token_string != '\0')
+	{
+		array_append_element(token_dictionary, token_string);
+		token_string++;
+	}
+	
+	array_append_element(token_dictionary, "\0");
+	return return_value;
+}
+
 void generate_dictionary(array_t *token_dictionary, array_t *token_dictionary_index, array_t tokens, array_t token_index)
 {
-	long i, j, *token_i;
+	long i, *token_i;
 	char* token_string;
 	
 	for(i = 0; i < token_index.length; i++)
 	{
 		token_i = (long *)array_get_element_at(token_index, i);
 		token_string = (char*)array_get_element_at(tokens, *token_i);
+		printf("%ld\n", get_dictionary_index(token_dictionary, token_dictionary_index,  token_string));
+	}
+}
+
+void print_dictionary(array_t dictionary_token, array_t dictionary_token_index)
+{
+	long i, *token_i;
+	char *token_string;
+	for(i = 0; i < dictionary_token_index.length; i++)
+	{
+		token_i = (long *)array_get_element_at(dictionary_token_index, i);
+		token_string = (char*)array_get_element_at(dictionary_token, *token_i);
 		printf("%s\n", token_string);
 	}
+}
+
+void generate_tokenized_training_data(array_t training_data, array_t dictionary_token, array_t dictionary_token_index, array_t tokens, array_t token_index)
+{
+	
 }
 
 int main(void)
@@ -259,7 +303,13 @@ int main(void)
 		generate_tokens(&tokens, &token_index, "libro_test.txt");
 	}
 
+	dictionary_token = array_create(100, sizeof(char));
+	dictionary_token_index = array_create(100, sizeof(long));
+
 	generate_dictionary(&dictionary_token, &dictionary_token_index, tokens, token_index);
+	print_dictionary(dictionary_token, dictionary_token_index);
+	generate_tokenized_training_data(dictionary_token, dictionary_token_index, tokens, token_index);
+
 
 	return 0;
 

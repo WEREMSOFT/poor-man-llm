@@ -1,4 +1,4 @@
-all: build
+all: build clean_data
 	./main.bin
 
 build: clean
