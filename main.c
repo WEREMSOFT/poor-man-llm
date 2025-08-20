@@ -101,9 +101,6 @@ void generate_tokens(array_t* tokens, array_t* token_index, char* training_data_
 			}
 		}
 
-		array_save_to_disk(*tokens, "model_data/tokens.arr");		
-		array_save_to_disk(*token_index, "model_data/token_index.arr");
-		
 		munmap(file_content, sb.st_size);
 		close(fd);
 }
@@ -317,22 +314,24 @@ int main(void)
 	char file_name[500] = {0};
 	long i;
 	
-	tokens = array_load_from_disk("model_data/tokens.arr");
-	token_index = array_load_from_disk("model_data/token_index.arr");
+	dictionary_token = array_load_from_disk("model_data/dictionary_token.arr");
+	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
 
-	if(tokens.length == 0 || token_index.length == 0)
+	if(tokenized_training_data.length == 0)
 	{
 		generate_tokens(&tokens, &token_index, "libro_test.txt");
+	
+		dictionary_token = array_create(100, sizeof(char));
+		dictionary_token_index = array_create(100, sizeof(long));
+	
+		generate_dictionary(&dictionary_token, &dictionary_token_index, tokens, token_index);
+	
+		tokenized_training_data = array_create(100, sizeof(long));
+		generate_tokenized_training_data(&tokenized_training_data, dictionary_token, dictionary_token_index, tokens, token_index);
+		array_save_to_disk(dictionary_token, "model_data/dictionary_token.arr");
+		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
 	}
-
-	dictionary_token = array_create(100, sizeof(char));
-	dictionary_token_index = array_create(100, sizeof(long));
-
-	generate_dictionary(&dictionary_token, &dictionary_token_index, tokens, token_index);
-
-	tokenized_training_data = array_create(100, sizeof(long));
-	generate_tokenized_training_data(&tokenized_training_data, dictionary_token, dictionary_token_index, tokens, token_index);
-
+	
 	print_tokenized_data(tokenized_training_data, dictionary_token);
 
 	return 0;
