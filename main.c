@@ -260,7 +260,7 @@ void generate_dictionary(array_t *token_dictionary, array_t *token_dictionary_in
 	{
 		token_i = (long *)array_get_element_at(token_index, i);
 		token_string = (char*)array_get_element_at(tokens, *token_i);
-		printf("%ld\n", get_dictionary_index(token_dictionary, token_dictionary_index,  token_string));
+		get_dictionary_index(token_dictionary, token_dictionary_index,  token_string);
 	}
 }
 
@@ -276,9 +276,30 @@ void print_dictionary(array_t dictionary_token, array_t dictionary_token_index)
 	}
 }
 
-void generate_tokenized_training_data(array_t training_data, array_t dictionary_token, array_t dictionary_token_index, array_t tokens, array_t token_index)
+void generate_tokenized_training_data(array_t *training_data, array_t dictionary_token, array_t dictionary_token_index, array_t tokens, array_t token_index)
 {
-	
+	long i, *token_i;
+	char *token_string;
+	long dictionary_index;
+	for(i = 0; i < token_index.length; i++)
+	{
+		token_i = (long *)array_get_element_at(token_index, i);
+		token_string = (char*)array_get_element_at(tokens, *token_i);
+		dictionary_index = get_dictionary_index(&dictionary_token, &dictionary_token_index,  token_string);
+		array_append_element(training_data, &dictionary_index);
+	}
+}
+
+void print_tokenized_data(array_t tokenized_data, array_t dictionary)
+{
+	long i, *token_i;
+	char *token_string;
+	for(i = 0; i < tokenized_data.length; i++)
+	{
+		token_i = (long *)array_get_element_at(tokenized_data, i);
+		token_string = (char*)array_get_element_at(dictionary, *token_i);
+		printf("%s ", token_string);
+	}
 }
 
 int main(void)
@@ -291,6 +312,7 @@ int main(void)
 	array_t dictionary_token = {0};
 	array_t dictionary_token_index = {0};
 
+	array_t tokenized_training_data = {0};
 
 	char file_name[500] = {0};
 	long i;
@@ -307,9 +329,11 @@ int main(void)
 	dictionary_token_index = array_create(100, sizeof(long));
 
 	generate_dictionary(&dictionary_token, &dictionary_token_index, tokens, token_index);
-	print_dictionary(dictionary_token, dictionary_token_index);
-	generate_tokenized_training_data(dictionary_token, dictionary_token_index, tokens, token_index);
 
+	tokenized_training_data = array_create(100, sizeof(long));
+	generate_tokenized_training_data(&tokenized_training_data, dictionary_token, dictionary_token_index, tokens, token_index);
+
+	print_tokenized_data(tokenized_training_data, dictionary_token);
 
 	return 0;
 
