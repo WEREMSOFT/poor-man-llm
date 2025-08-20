@@ -16,54 +16,9 @@ void print_words(array_t tokens, array_t token_index);
 array_t build_token_graph(array_t tokens, array_t token_index);
 void generate_phrase(array_t word_graph, char* initial_word, array_t tokens);
 node_t* find_word(char* word, array_t word_graph, array_t tokens);
-void generate_tokens(array_t* tokens, array_t* token_index);
+void generate_tokens(array_t* tokens, array_t* token_index, char* training_data_filename);
 void print_graph(array_t graph, array_t tokens);
 
-int main(void)
-{
-	array_t token_graph = {0};
-	array_t tokens = {0};	
-	array_t token_index = {0};
-	node_t *node_temp;
-	char file_name[500] = {0};
-	long i;
-	
-	tokens = array_load_from_disk("model_data/tokens.arr");
-	token_index = array_load_from_disk("model_data/token_index.arr");
-
-	if(tokens.length == 0 || token_index.length == 0)
-	{
-		generate_tokens(&tokens, &token_index);
-	}
-
-	token_graph = array_load_from_disk("model_data/token_graph.arr");
-
-	if(token_graph.length != 0)
-	{
-		for( i = 0; i < token_graph.length; i++)
-		{
-			node_temp = array_get_element_at(token_graph, i);
-			sprintf(file_name, "model_data/token_graph_%ld.arr", i);
-			node_temp->children = array_load_from_disk(file_name);
-		}
-	}
-
-	if(token_graph.length == 0)
-	{
-		token_graph = build_token_graph(tokens, token_index);
-	}
-
-	printf("\n");
-	generate_phrase(token_graph, "If", tokens);
-	printf("\n");
-	generate_phrase(token_graph, "Then", tokens);
-	printf("\n");
-	generate_phrase(token_graph, "Although", tokens);
-	printf("\n");
-	generate_phrase(token_graph, "Finally", tokens);
-	
-	return 0;
-}
 
 void print_graph(array_t graph, array_t tokens)
 {
@@ -82,7 +37,7 @@ void print_graph(array_t graph, array_t tokens)
 	}
 }
 
-void generate_tokens(array_t* tokens, array_t* token_index)
+void generate_tokens(array_t* tokens, array_t* token_index, char* training_data_filename)
 {
 		char *file_content;
 		int fd;
@@ -95,7 +50,7 @@ void generate_tokens(array_t* tokens, array_t* token_index)
 		*tokens = array_create(1000, sizeof(char));
 		*token_index = array_create(1000, sizeof(long));
 		
-		fd = open("libro.txt", O_RDONLY);
+		fd = open(training_data_filename, O_RDONLY);
 
 		if(fd == -1)
 		{
@@ -268,4 +223,71 @@ array_t build_token_graph(array_t tokens, array_t token_index)
 
 	return word_graph;	
 }
- 
+
+void generate_dictionary(array_t *token_dictionary, array_t *token_dictionary_index, array_t tokens, array_t token_index)
+{
+	long i, j, *token_i;
+	char* token_string;
+	
+	for(i = 0; i < token_index.length; i++)
+	{
+		token_i = (long *)array_get_element_at(token_index, i);
+		token_string = (char*)array_get_element_at(tokens, *token_i);
+		printf("%s\n", token_string);
+	}
+}
+
+int main(void)
+{
+	array_t token_graph = {0};
+	array_t tokens = {0};	
+	array_t token_index = {0};
+	node_t *node_temp;
+
+	array_t dictionary_token = {0};
+	array_t dictionary_token_index = {0};
+
+
+	char file_name[500] = {0};
+	long i;
+	
+	tokens = array_load_from_disk("model_data/tokens.arr");
+	token_index = array_load_from_disk("model_data/token_index.arr");
+
+	if(tokens.length == 0 || token_index.length == 0)
+	{
+		generate_tokens(&tokens, &token_index, "libro_test.txt");
+	}
+
+	generate_dictionary(&dictionary_token, &dictionary_token_index, tokens, token_index);
+
+	return 0;
+
+	token_graph = array_load_from_disk("model_data/token_graph.arr");
+
+	if(token_graph.length != 0)
+	{
+		for( i = 0; i < token_graph.length; i++)
+		{
+			node_temp = array_get_element_at(token_graph, i);
+			sprintf(file_name, "model_data/token_graph_%ld.arr", i);
+			node_temp->children = array_load_from_disk(file_name);
+		}
+	}
+
+	if(token_graph.length == 0)
+	{
+		token_graph = build_token_graph(tokens, token_index);
+	}
+
+	printf("\n");
+	generate_phrase(token_graph, "If", tokens);
+	printf("\n");
+	generate_phrase(token_graph, "Then", tokens);
+	printf("\n");
+	generate_phrase(token_graph, "Although", tokens);
+	printf("\n");
+	generate_phrase(token_graph, "Finally", tokens);
+	
+	return 0;
+}
