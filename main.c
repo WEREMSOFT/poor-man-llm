@@ -295,8 +295,126 @@ void print_tokenized_data(array_t tokenized_data, array_t dictionary)
 	{
 		token_i = (long *)array_get_element_at(tokenized_data, i);
 		token_string = (char*)array_get_element_at(dictionary, *token_i);
-		printf("%s ", token_string);
+		printf("%ld %s | ", *token_i, token_string);
 	}
+	printf("\n");
+}
+
+node_n_t* get_node_by_key(array_t token_graph, long key[NODE_NUM_PARAM])
+{
+	long i, j;
+	bool found = false;
+	node_n_t *node;
+
+	for(i = 0; i < token_graph.length && !found; i++)
+	{
+		node = (node_n_t*)array_get_element_at(token_graph, i);
+
+		found = true;
+		for(j = 0; j < NODE_NUM_PARAM; j++)
+		{
+			found &= node->token[j] == key[j];
+		}
+	}
+
+	return found ? node : NULL;
+}
+
+void build_graph_from_tokenized_data(array_t *token_graph, array_t tokenized_training_data)
+{
+	long i, j, *training_token, key[NODE_NUM_PARAM] = {0};
+	node_n_t temp_node = {0}, *parent_node;
+
+	for(i = 0; i < tokenized_training_data.length; i++)
+	{
+		temp_node = node_n_create();
+
+		for(j = 0; j < NODE_NUM_PARAM && i - j - 1 >= 0; j++)
+		{
+			training_token = array_get_element_at(tokenized_training_data, i - 1 - j);
+			key[j] = *training_token;
+		}
+
+		parent_node = get_node_by_key(*token_graph, key);
+
+		if(parent_node != NULL)
+		{
+			array_append_element(&parent_node->children, &token_graph->length);
+		} else {
+			for(j = 0; j < NODE_NUM_PARAM; j++)
+			{
+				temp_node.token[j] = key[j];
+			}
+			array_append_element(token_graph, &temp_node);
+		}
+	}
+}
+
+array_t load_token_graph()
+{
+	long i;
+	array_t token_graph;
+	node_n_t *node_temp;
+	char file_name[500];
+
+	token_graph = array_load_from_disk("model_data/token_graph.arr");
+
+	if(token_graph.length != 0)
+	{
+		for( i = 0; i < token_graph.length; i++)
+		{
+			node_temp = array_get_element_at(token_graph, i);
+			sprintf(file_name, "model_data/token_graph_%ld.arr", i);
+			node_temp->children = array_load_from_disk(file_name);
+		}
+	}
+
+	return token_graph;
+}
+
+void save_token_graph(array_t token_graph)
+{
+	node_n_t *node_temp;
+	char file_name[500] = {0};
+	long i;
+
+	array_save_to_disk(token_graph, "model_data/token_graph.arr");
+	for( i = 0; i < token_graph.length; i++)
+	{
+		node_temp = array_get_element_at(token_graph, i);
+		sprintf(file_name, "model_data/token_graph_%ld.arr", i);
+		array_save_to_disk(node_temp->children, file_name);	
+	}
+}
+
+void print_token_graph(array_t graph, array_t tokens)
+{
+	long i, j;
+	node_n_t *node, *child_node;
+	
+	for(i = 0; i < graph.length; i++)
+	{
+		node = array_get_element_at(graph, i);
+		printf("%s\n", &((char *)tokens.data)[node->token[0]]);
+		for(j = 0; j < node->children.length; j++)
+		{
+			child_node = array_get_element_at(node->children, j);
+			printf("\t%s\n", &((char *)tokens.data)[child_node->token[0]]);
+		}
+	}
+
+	/*
+		long i, *token_i;
+	char *token_string;
+	for(i = 0; i < tokenized_data.length; i++)
+	{
+		token_i = (long *)array_get_element_at(tokenized_data, i);
+		token_string = (char*)array_get_element_at(dictionary, *token_i);
+		printf("%ld %s | ", *token_i, token_string);
+	}
+	printf("\n");
+	
+	*/
 }
 
 int main(void)
@@ -304,16 +422,13 @@ int main(void)
 	array_t token_graph = {0};
 	array_t tokens = {0};	
 	array_t token_index = {0};
-	node_t *node_temp;
 
 	array_t dictionary_token = {0};
 	array_t dictionary_token_index = {0};
 
 	array_t tokenized_training_data = {0};
 
-	char file_name[500] = {0};
-	long i;
-	
+
 	dictionary_token = array_load_from_disk("model_data/dictionary_token.arr");
 	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
 
@@ -331,11 +446,22 @@ int main(void)
 		array_save_to_disk(dictionary_token, "model_data/dictionary_token.arr");
 		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
 	}
-	
+
 	print_tokenized_data(tokenized_training_data, dictionary_token);
 
-	return 0;
+	token_graph = load_token_graph();
 
+	if(token_graph.length == 0)
+	{
+		token_graph = array_create(100, sizeof(node_n_t));
+		build_graph_from_tokenized_data(&token_graph, tokenized_training_data);
+		save_token_graph(token_graph);
+	}
+
+	print_token_graph(token_graph, tokenized_training_data);
+
+	return 0;
+/*
 	token_graph = array_load_from_disk("model_data/token_graph.arr");
 
 	if(token_graph.length != 0)
@@ -350,7 +476,7 @@ int main(void)
 
 	if(token_graph.length == 0)
 	{
-		token_graph = build_token_graph(tokens, token_index);
+		token_graph = build_token_graph(tokenized_training_data, token_index);
 	}
 
 	printf("\n");
@@ -363,4 +489,5 @@ int main(void)
 	generate_phrase(token_graph, "Finally", tokens);
 	
 	return 0;
+	*/
 }
