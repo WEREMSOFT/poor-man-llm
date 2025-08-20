@@ -389,32 +389,24 @@ void save_token_graph(array_t token_graph)
 
 void print_token_graph(array_t graph, array_t tokens)
 {
-	long i, j;
+	long i, j, k, *child_node_index;
 	node_n_t *node, *child_node;
 	
 	for(i = 0; i < graph.length; i++)
 	{
 		node = array_get_element_at(graph, i);
-		printf("%s\n", &((char *)tokens.data)[node->token[0]]);
+		for(k = 0; k < NODE_NUM_PARAM; k++)
+		{
+			printf("%s-", &((char *)tokens.data)[node->token[k]]);
+		}
+		printf("\n");
 		for(j = 0; j < node->children.length; j++)
 		{
-			child_node = array_get_element_at(node->children, j);
+			child_node_index = array_get_element_at(node->children, j);
+			child_node = (node_n_t*)array_get_element_at(graph, *child_node_index);
 			printf("\t%s\n", &((char *)tokens.data)[child_node->token[0]]);
 		}
 	}
-
-	/*
-		long i, *token_i;
-	char *token_string;
-	for(i = 0; i < tokenized_data.length; i++)
-	{
-		token_i = (long *)array_get_element_at(tokenized_data, i);
-		token_string = (char*)array_get_element_at(dictionary, *token_i);
-		printf("%ld %s | ", *token_i, token_string);
-	}
-	printf("\n");
-	
-	*/
 }
 
 int main(void)
@@ -458,7 +450,7 @@ int main(void)
 		save_token_graph(token_graph);
 	}
 
-	print_token_graph(token_graph, tokenized_training_data);
+	print_token_graph(token_graph, dictionary_token);
 
 	return 0;
 /*
