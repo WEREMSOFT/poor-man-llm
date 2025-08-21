@@ -313,7 +313,7 @@ node_n_t* get_node_by_key(array_t token_graph, long key[NODE_NUM_PARAM])
 		found = true;
 		for(j = 0; j < NODE_NUM_PARAM; j++)
 		{
-			found &= node->token[j] == key[j];
+			found &= node->key[j] == key[j];
 		}
 	}
 
@@ -322,30 +322,37 @@ node_n_t* get_node_by_key(array_t token_graph, long key[NODE_NUM_PARAM])
 
 void build_graph_from_tokenized_data(array_t *token_graph, array_t tokenized_training_data)
 {
-	long i, j, *training_token, key[NODE_NUM_PARAM] = {0};
-	node_n_t temp_node = {0}, *parent_node;
+	long i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
+	node_n_t actual_node = {0}, *parent_node, *actual_node_p;
 
-	for(i = 0; i < tokenized_training_data.length; i++)
+	for(i = NODE_NUM_PARAM; i < tokenized_training_data.length - 1; i++)
 	{
-		temp_node = node_n_create();
+		actual_node = node_n_create();
 
-		for(j = 0; j < NODE_NUM_PARAM && i - j - 1 >= 0; j++)
+	 	for(j = 0; j < NODE_NUM_PARAM; j++)
 		{
-			training_token = array_get_element_at(tokenized_training_data, i - 1 - j);
-			key[j] = *training_token;
+			training_token = array_get_element_at(tokenized_training_data, i - NODE_NUM_PARAM + j);
+			parent_key[j] = *training_token;
+			training_token = array_get_element_at(tokenized_training_data, i + 1 - NODE_NUM_PARAM + j);
+			actual_key[j] = *training_token;
+			actual_node.key[j] = *training_token;
 		}
 
-		parent_node = get_node_by_key(*token_graph, key);
+		parent_node = get_node_by_key(*token_graph, parent_key);
+		actual_node_p = get_node_by_key(*token_graph, actual_key);
+
+		if(actual_node_p != NULL)
+		{
+			actual_node = *actual_node_p;
+
+		} else {
+			actual_node.index = token_graph->length;
+			array_append_element(token_graph, &actual_node);
+		}
 
 		if(parent_node != NULL)
 		{
-			array_append_element(&parent_node->children, &token_graph->length);
-		} else {
-			for(j = 0; j < NODE_NUM_PARAM; j++)
-			{
-				temp_node.token[j] = key[j];
-			}
-			array_append_element(token_graph, &temp_node);
+			array_append_element(&parent_node->children, &actual_node.index);
 		}
 	}
 }
@@ -395,16 +402,17 @@ void print_token_graph(array_t graph, array_t tokens)
 	for(i = 0; i < graph.length; i++)
 	{
 		node = array_get_element_at(graph, i);
+		
 		for(k = 0; k < NODE_NUM_PARAM; k++)
 		{
-			printf("%s-", &((char *)tokens.data)[node->token[k]]);
+			printf("%s-", &((char *)tokens.data)[node->key[k]]);
 		}
 		printf("\n");
 		for(j = 0; j < node->children.length; j++)
 		{
 			child_node_index = array_get_element_at(node->children, j);
 			child_node = (node_n_t*)array_get_element_at(graph, *child_node_index);
-			printf("\t%s\n", &((char *)tokens.data)[child_node->token[0]]);
+			printf("\t%s\n", &((char *)tokens.data)[child_node->key[NODE_NUM_PARAM - 1]]);
 		}
 	}
 }
@@ -453,33 +461,4 @@ int main(void)
 	print_token_graph(token_graph, dictionary_token);
 
 	return 0;
-/*
-	token_graph = array_load_from_disk("model_data/token_graph.arr");
-
-	if(token_graph.length != 0)
-	{
-		for( i = 0; i < token_graph.length; i++)
-		{
-			node_temp = array_get_element_at(token_graph, i);
-			sprintf(file_name, "model_data/token_graph_%ld.arr", i);
-			node_temp->children = array_load_from_disk(file_name);
-		}
-	}
-
-	if(token_graph.length == 0)
-	{
-		token_graph = build_token_graph(tokenized_training_data, token_index);
-	}
-
-	printf("\n");
-	generate_phrase(token_graph, "If", tokens);
-	printf("\n");
-	generate_phrase(token_graph, "Then", tokens);
-	printf("\n");
-	generate_phrase(token_graph, "Although", tokens);
-	printf("\n");
-	generate_phrase(token_graph, "Finally", tokens);
-	
-	return 0;
-	*/
 }

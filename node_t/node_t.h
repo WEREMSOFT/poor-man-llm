@@ -13,7 +13,8 @@ typedef struct node_t
 
 typedef struct node_n_t
 {
-	long token[NODE_NUM_PARAM];
+	long key[NODE_NUM_PARAM];
+	long index;
 	array_t children;
 } node_n_t;
 
@@ -21,7 +22,7 @@ node_n_t node_n_create()
 {
 	node_n_t node = {0};
 
-	node.token[0] = -1;
+	node.key[0] = -1;
 	node.children = array_create(5, sizeof(long));
 	return node;
 }

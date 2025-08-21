@@ -1,7 +1,7 @@
 all: build
 	./main.bin
 
-build: clean
+build: clean clean_data
 	gcc -g -Wall -Wextra -pedantic -std=c89 main.c -o main.bin
 
 build_release: clean
