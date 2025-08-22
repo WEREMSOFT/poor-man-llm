@@ -434,7 +434,7 @@ int main(void)
 
 	if(tokenized_training_data.length == 0)
 	{
-		generate_tokens(&tokens, &token_index, "libro_test.txt");
+		generate_tokens(&tokens, &token_index, "libro.txt");
 	
 		dictionary_token = array_create(100, sizeof(char));
 		dictionary_token_index = array_create(100, sizeof(long));
