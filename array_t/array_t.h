@@ -22,6 +22,7 @@ void array_delete_element_at(struct array_t *that, int index);
 void array_concatenate(struct array_t *that, struct array_t src);
 int array_save_to_disk(array_t array, char* file_name);
 array_t array_load_from_disk(char* file_name);
+array_t array_destroy(array_t array);
 
 #ifndef ARRAY_MALLOC
 #define ARRAY_MALLOC malloc
@@ -54,6 +55,14 @@ array_t array_create(int initialCapacity, size_t elementSize)
 	memset(array.data, 0, size);
 
     return array;
+}
+
+array_t array_destroy(array_t array)
+{
+	free(array.data);
+	array.capacity = array.elementSize = array.length  = 0;
+	array.data = NULL;
+	return array;
 }
 
 int array_save_to_disk(array_t array, char* file_name)

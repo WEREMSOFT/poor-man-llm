@@ -320,6 +320,33 @@ node_n_t* get_node_by_key(array_t token_graph, long key[NODE_NUM_PARAM])
 	return found ? node : NULL;
 }
 
+array_t get_nodes_by_key(array_t token_graph, long key[NODE_NUM_PARAM])
+{
+	long i, j;
+	bool found = false;
+	node_n_t *node;
+
+	array_t nodes = array_create(10, sizeof(long));
+
+	for(i = 0; i < token_graph.length; i++)
+	{
+		node = (node_n_t*)array_get_element_at(token_graph, i);
+
+		found = true;
+		for(j = 0; j < NODE_NUM_PARAM; j++)
+		{
+			found &= node->key[j] == key[j] || key[j] == -1;
+		}
+		if(found)
+		{
+			array_append_element(&nodes, &i);
+		}
+		
+	}
+
+	return nodes;
+}
+
 void build_graph_from_tokenized_data(array_t *token_graph, array_t tokenized_training_data)
 {
 	long i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
@@ -421,6 +448,80 @@ void print_token_graph(array_t graph, array_t tokens)
 	}
 }
 
+void print_nodes_by_indexes(array_t graph, array_t tokens, array_t indices)
+{
+	long i, j, k, *child_node_index, *index;
+	node_n_t *node, *child_node;
+	
+	for(i = 0; i < indices.length; i++)
+	{
+		index = array_get_element_at(indices, i);
+		node = array_get_element_at(graph, *index);
+		
+		printf("%ld. ", i);
+		for(k = 0; k < NODE_NUM_PARAM; k++)
+		{
+			printf("%ld %s-", node->key[k],&((char *)tokens.data)[node->key[k]]);
+		}
+		printf("\n");
+		for(j = 0; j < node->children.length; j++)
+		{
+			child_node_index = array_get_element_at(node->children, j);
+			child_node = (node_n_t*)array_get_element_at(graph, *child_node_index);
+			printf("\t%s\n", &((char *)tokens.data)[child_node->key[NODE_NUM_PARAM - 1]]);
+		}
+	}
+}
+
+void generate_phrase_from_tokenized_graph(array_t words, array_t token_graph, array_t dictionary, array_t dictionary_index)
+{
+	long i, keys[NODE_NUM_PARAM] = {0}, random_index, *index;
+	array_t posible_initial_nodes = {0};
+	node_n_t *actual_node;
+	bool should_continue = true;
+	char *word;
+
+	srand((unsigned int)time(NULL));
+
+	for(i = 0; i < NODE_NUM_PARAM; i++)
+	{
+		keys[i] = -1;
+	}
+
+	for(i = 0; i < NODE_NUM_PARAM && i < words.length; i++)
+	{
+		keys[i] = get_dictionary_index(&dictionary, &dictionary_index, array_get_element_at(words, i));
+	}
+	
+	posible_initial_nodes = get_nodes_by_key(token_graph, keys);
+
+	random_index = rand() % posible_initial_nodes.length;
+
+	index = array_get_element_at(posible_initial_nodes, random_index);
+
+	actual_node = array_get_element_at(token_graph, *index);
+
+	for(i = 0; i < NODE_NUM_PARAM; i++)
+	{
+		word = &((char *)dictionary.data)[actual_node->key[i]];
+		printf("%s ", word);
+	}
+
+	while(should_continue)
+	{
+		random_index = rand() % actual_node->children.length;
+		index = array_get_element_at(actual_node->children, random_index);
+		actual_node = array_get_element_at(token_graph, *index);
+		word = &((char *)dictionary.data)[actual_node->key[NODE_NUM_PARAM - 1]];
+		if(strcmp(word, ".") == 0)
+		{
+			should_continue = false;
+		}
+		printf("%s ", word);
+	}
+	printf("\n");
+}
+
 int main(void)
 {
 	array_t token_graph = {0};
@@ -432,9 +533,11 @@ int main(void)
 
 	array_t tokenized_training_data = {0};
 
+	array_t words = {0};
 
 	dictionary_token = array_load_from_disk("model_data/dictionary_token.arr");
 	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
+	dictionary_token_index = array_load_from_disk("model_data/dictionary_token_index.arr");
 
 	if(tokenized_training_data.length == 0)
 	{
@@ -449,6 +552,7 @@ int main(void)
 		generate_tokenized_training_data(&tokenized_training_data, dictionary_token, dictionary_token_index, tokens, token_index);
 		array_save_to_disk(dictionary_token, "model_data/dictionary_token.arr");
 		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
+		array_save_to_disk(dictionary_token_index, "model_data/dictionary_token_index.arr");
 	}
 
 	token_graph = load_token_graph();
@@ -460,7 +564,31 @@ int main(void)
 		save_token_graph(token_graph);
 	}
 
-	print_token_graph(token_graph, dictionary_token);
+	words = array_create(3, sizeof(char*));
+
+	array_append_element(&words, "The");
+	array_append_element(&words, "old");
+
+	generate_phrase_from_tokenized_graph(words, token_graph, dictionary_token, dictionary_token_index);
+
+	printf("\n");
+
+	words = array_destroy(words);
+	words = array_create(3, sizeof(char*));
+
+	array_append_element(&words, "But");
+	array_append_element(&words, "then");
+
+	generate_phrase_from_tokenized_graph(words, token_graph, dictionary_token, dictionary_token_index);
+
+	printf("\n");
+
+	words = array_destroy(words);
+	words = array_create(3, sizeof(char*));
+
+	array_append_element(&words, "Finally");
+
+	generate_phrase_from_tokenized_graph(words, token_graph, dictionary_token, dictionary_token_index);
 
 	return 0;
 }

@@ -2,10 +2,10 @@ all: build
 	./main.bin
 
 build: clean
-	gcc -Wall -Wextra -pedantic -std=c89 main.c -o main.bin
+	gcc -g -Wall -Wextra -pedantic -std=c89 main.c -o main.bin
 
 build_release: clean
-	gcc -g -O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG -std=c89 main.c -o main.bin
+	gcc -O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG -std=c89 main.c -o main.bin
 
 clean:
 	rm -f *.o
