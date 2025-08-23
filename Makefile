@@ -2,10 +2,10 @@ all: build
 	./main.bin
 
 build: clean
-	gcc -g -Wall -Wextra -pedantic -std=c89 main.c -o main.bin
+	gcc -Wall -Wextra -pedantic -std=c89 main.c -o main.bin
 
 build_release: clean
-	gcc -O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG -std=c89 main.c -o main.bin
+	gcc -g -O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG -std=c89 main.c -o main.bin
 
 clean:
 	rm -f *.o
@@ -16,4 +16,7 @@ clean_data:
 	rm -rf model_data
 	mkdir model_data
 	touch model_data/.gitkeep
+
+valgrind: build
+	valgrind --tool=memcheck ./main.bin
 	

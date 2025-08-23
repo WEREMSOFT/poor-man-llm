@@ -338,18 +338,17 @@ void build_graph_from_tokenized_data(array_t *token_graph, array_t tokenized_tra
 			actual_node.key[j] = *training_token;
 		}
 
-		parent_node = get_node_by_key(*token_graph, parent_key);
 		actual_node_p = get_node_by_key(*token_graph, actual_key);
 
 		if(actual_node_p != NULL)
 		{
 			actual_node = *actual_node_p;
-
 		} else {
 			actual_node.index = token_graph->length;
 			array_append_element(token_graph, &actual_node);
 		}
 
+		parent_node = get_node_by_key(*token_graph, parent_key);
 		if(parent_node != NULL)
 		{
 			array_append_element(&parent_node->children, &actual_node.index);
@@ -403,6 +402,11 @@ void print_token_graph(array_t graph, array_t tokens)
 	{
 		node = array_get_element_at(graph, i);
 		
+		if(node->children.length < 2)
+		{
+			continue;
+		}
+
 		for(k = 0; k < NODE_NUM_PARAM; k++)
 		{
 			printf("%s-", &((char *)tokens.data)[node->key[k]]);
@@ -446,8 +450,6 @@ int main(void)
 		array_save_to_disk(dictionary_token, "model_data/dictionary_token.arr");
 		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
 	}
-
-	print_tokenized_data(tokenized_training_data, dictionary_token);
 
 	token_graph = load_token_graph();
 
