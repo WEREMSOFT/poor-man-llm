@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
+#include <pthread.h>
 
 #define __ARRAY_T_IMPLEMENTATION__
 #include "array_t/array_t.h"
@@ -19,6 +20,78 @@ void build_graph(array_t *graph, array_t tokenized_training_data);
 void save_graph(array_t graph);
 array_t load_graph();
 
+#define PTHREAD_NUM 2
+
+typedef struct thread_params_t
+{
+	long start;
+	long how_many;
+	array_t graph;
+	array_t tokenized_training_data; 
+} thread_params_t;
+
+void *build_graph_slice(void *params)
+{
+	thread_params_t *param = params;
+	printf("start: %ld, how_many: %ld, graph_size: %ld, training_data_size: %ld\n", param->start, param->how_many, param->graph.capacity, param->tokenized_training_data.length);
+	
+	long i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
+	node_n_t actual_node = {0}, *parent_node, *actual_node_p;
+
+	for(i = param->start + NODE_NUM_PARAM; i < param->start + param->how_many - 1; i++)
+	{
+		actual_node = node_n_create();
+
+	 	for(j = 0; j < NODE_NUM_PARAM; j++)
+		{
+			training_token = array_get_element_at(param->tokenized_training_data, i - NODE_NUM_PARAM + j);
+			parent_key[j] = *training_token;
+			training_token = array_get_element_at(param->tokenized_training_data, i + 1 - NODE_NUM_PARAM + j);
+			actual_key[j] = *training_token;
+			actual_node.key[j] = *training_token;
+		}
+
+		actual_node_p = get_node_by_key(param->graph, actual_key);
+
+		if(actual_node_p != NULL)
+		{
+			actual_node = *actual_node_p;
+		} else {
+			actual_node.index = param->graph.length;
+			array_append_element(&param->graph, &actual_node);
+		}
+
+		parent_node = get_node_by_key(param->graph, parent_key);
+		if(parent_node != NULL)
+		{
+			array_append_element(&parent_node->children, &actual_node.index);
+		}
+	}
+	
+	return NULL;
+}
+
+void build_graph_threaded(array_t tokenized_training_data)
+{
+	int i;
+	pthread_t threads[PTHREAD_NUM];
+	thread_params_t thread_params[PTHREAD_NUM] = {0};
+	long slice_size = tokenized_training_data.length / PTHREAD_NUM;
+
+	for(i = 0; i < PTHREAD_NUM; i++)
+	{
+		thread_params[i].start = i * slice_size;
+		thread_params[i].how_many = slice_size;
+		thread_params[i].tokenized_training_data = tokenized_training_data;
+		thread_params[i].graph = array_create(100, sizeof(node_t));
+		pthread_create(&threads[i], NULL, build_graph_slice, &thread_params[i]);
+	}
+
+	for(i = 0; i < 3; i++)
+	{
+		pthread_join(threads[i], NULL);
+	}
+}
 
 int main(void)
 {
@@ -87,6 +160,8 @@ int main(void)
 	array_append_element(&words, "Finally");
 
 	generate_phrase(words, graph, dictionary, dictionary_indices);
+
+	build_graph_threaded(tokenized_training_data);
 
 	return 0;
 }
