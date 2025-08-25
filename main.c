@@ -12,6 +12,7 @@
 #include "array_t/array_t.h"
 #include "node_t/node_t.h"
 
+node_t* get_node_by_key(array_t graph, long key[NODE_NUM_PARAM]);
 void generate_tokens(array_t* tokens, array_t* token_indices, char* training_data_filename);
 void generate_dictionary(array_t *dictionary, array_t *dictionary_indices, array_t tokens, array_t token_indices);
 void generate_training_data(array_t *training_data, array_t dictionary, array_t dictionary_indices, array_t tokens, array_t token_indices);
@@ -20,7 +21,7 @@ void build_graph(array_t *graph, array_t tokenized_training_data);
 void save_graph(array_t graph);
 array_t load_graph();
 
-#define PTHREAD_NUM 2
+#define PTHREAD_NUM 8
 
 typedef struct thread_params_t
 {
@@ -32,15 +33,15 @@ typedef struct thread_params_t
 
 void *build_graph_slice(void *params)
 {
+	long i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
 	thread_params_t *param = params;
+	node_t actual_node = {0}, *parent_node, *actual_node_p;
 	printf("start: %ld, how_many: %ld, graph_size: %ld, training_data_size: %ld\n", param->start, param->how_many, param->graph.capacity, param->tokenized_training_data.length);
 	
-	long i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
-	node_n_t actual_node = {0}, *parent_node, *actual_node_p;
 
 	for(i = param->start + NODE_NUM_PARAM; i < param->start + param->how_many - 1; i++)
 	{
-		actual_node = node_n_create();
+		actual_node = node_create();
 
 	 	for(j = 0; j < NODE_NUM_PARAM; j++)
 		{
@@ -130,7 +131,7 @@ int main(void)
 
 	if(graph.length == 0)
 	{
-		graph = array_create(100, sizeof(node_n_t));
+		graph = array_create(100, sizeof(node_t));
 		build_graph(&graph, tokenized_training_data);
 		save_graph(graph);
 	}
@@ -174,11 +175,11 @@ void print_graph(array_t graph, array_t tokens)
 	for(i = 0; i < graph.length; i++)
 	{
 		node = array_get_element_at(graph, i);
-		printf("%s\n", &((char *)tokens.data)[node->token]);
+		printf("%s\n", &((char *)tokens.data)[node->key[0]]);
 		for(j = 0; j < node->children.length; j++)
 		{
 			child_node = array_get_element_at(node->children, j);
-			printf("\t%s\n", &((char *)tokens.data)[child_node->token]);
+			printf("\t%s\n", &((char *)tokens.data)[child_node->key[0]]);
 		}
 	}
 }
@@ -272,7 +273,7 @@ node_t* find_word(char* word, array_t word_graph, array_t tokens)
 	for(i = 0; i < word_graph.length; i++)
 	{
 		element = (node_t *)array_get_element_at(word_graph, i);
-		current_word =  &((char *)tokens.data)[element->token];
+		current_word =  &((char *)tokens.data)[element->key[0]];
 		if(strcmp(current_word, word) == 0)
 		{
 			return element;
@@ -286,7 +287,7 @@ node_t* word_append_to_graph(array_t* word_graph, long *index)
 {
 	node_t word_node = {0};
 	word_node = node_create();
-	word_node.token = *index;
+	word_node.key[0] = *index;
 	array_append_element(word_graph, &word_node);
 	return array_get_element_at(*word_graph, word_graph->length - 1);
 }
@@ -415,15 +416,15 @@ void print_tokenized_data(array_t tokenized_data, array_t dictionary)
 	printf("\n");
 }
 
-node_n_t* get_node_by_key(array_t graph, long key[NODE_NUM_PARAM])
+node_t* get_node_by_key(array_t graph, long key[NODE_NUM_PARAM])
 {
 	long i, j;
 	bool found = false;
-	node_n_t *node;
+	node_t *node;
 
 	for(i = 0; i < graph.length && !found; i++)
 	{
-		node = (node_n_t*)array_get_element_at(graph, i);
+		node = (node_t*)array_get_element_at(graph, i);
 
 		found = true;
 		for(j = 0; j < NODE_NUM_PARAM; j++)
@@ -439,13 +440,13 @@ array_t get_nodes_by_key(array_t graph, long key[NODE_NUM_PARAM])
 {
 	long i, j;
 	bool found = false;
-	node_n_t *node;
+	node_t *node;
 
 	array_t nodes = array_create(10, sizeof(long));
 
 	for(i = 0; i < graph.length; i++)
 	{
-		node = (node_n_t*)array_get_element_at(graph, i);
+		node = (node_t*)array_get_element_at(graph, i);
 
 		found = true;
 		for(j = 0; j < NODE_NUM_PARAM; j++)
@@ -465,11 +466,11 @@ array_t get_nodes_by_key(array_t graph, long key[NODE_NUM_PARAM])
 void build_graph(array_t *graph, array_t tokenized_training_data)
 {
 	long i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
-	node_n_t actual_node = {0}, *parent_node, *actual_node_p;
+	node_t actual_node = {0}, *parent_node, *actual_node_p;
 
 	for(i = NODE_NUM_PARAM; i < tokenized_training_data.length - 1; i++)
 	{
-		actual_node = node_n_create();
+		actual_node = node_create();
 
 	 	for(j = 0; j < NODE_NUM_PARAM; j++)
 		{
@@ -502,7 +503,7 @@ array_t load_graph()
 {
 	long i;
 	array_t graph;
-	node_n_t *node_temp;
+	node_t *node_temp;
 	char file_name[500];
 
 	graph = array_load_from_disk("model_data/graph.arr");
@@ -522,7 +523,7 @@ array_t load_graph()
 
 void save_graph(array_t graph)
 {
-	node_n_t *node_temp;
+	node_t *node_temp;
 	char file_name[500] = {0};
 	long i;
 
@@ -538,7 +539,7 @@ void save_graph(array_t graph)
 void print_token_graph(array_t graph, array_t tokens)
 {
 	long i, j, k, *child_node_index;
-	node_n_t *node, *child_node;
+	node_t *node, *child_node;
 	
 	for(i = 0; i < graph.length; i++)
 	{
@@ -557,7 +558,7 @@ void print_token_graph(array_t graph, array_t tokens)
 		for(j = 0; j < node->children.length; j++)
 		{
 			child_node_index = array_get_element_at(node->children, j);
-			child_node = (node_n_t*)array_get_element_at(graph, *child_node_index);
+			child_node = (node_t*)array_get_element_at(graph, *child_node_index);
 			printf("\t%s\n", &((char *)tokens.data)[child_node->key[NODE_NUM_PARAM - 1]]);
 		}
 	}
@@ -566,7 +567,7 @@ void print_token_graph(array_t graph, array_t tokens)
 void print_nodes_by_indexes(array_t graph, array_t tokens, array_t indices)
 {
 	long i, j, k, *child_node_index, *index;
-	node_n_t *node, *child_node;
+	node_t *node, *child_node;
 	
 	for(i = 0; i < indices.length; i++)
 	{
@@ -582,7 +583,7 @@ void print_nodes_by_indexes(array_t graph, array_t tokens, array_t indices)
 		for(j = 0; j < node->children.length; j++)
 		{
 			child_node_index = array_get_element_at(node->children, j);
-			child_node = (node_n_t*)array_get_element_at(graph, *child_node_index);
+			child_node = (node_t*)array_get_element_at(graph, *child_node_index);
 			printf("\t%s\n", &((char *)tokens.data)[child_node->key[NODE_NUM_PARAM - 1]]);
 		}
 	}
@@ -592,7 +593,7 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 {
 	long i, keys[NODE_NUM_PARAM] = {0}, random_index, *index;
 	array_t posible_initial_nodes = {0};
-	node_n_t *actual_node;
+	node_t *actual_node;
 	bool should_continue = true;
 	char *word;
 
