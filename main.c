@@ -11,6 +11,7 @@
 #define __ARRAY_T_IMPLEMENTATION__
 #include "array_t/array_t.h"
 #include "node_t/node_t.h"
+#include "stopwatch.h"
 
 node_t* get_node_by_key(array_t graph, long key[NODE_NUM_PARAM]);
 void generate_tokens(array_t* tokens, array_t* token_indices, char* training_data_filename);
@@ -160,9 +161,12 @@ int main(void)
 
 	array_append_element(&words, "Finally");
 
+	stopwatch_start();
 	generate_phrase(words, graph, dictionary, dictionary_indices);
-
+	stopwatch_stop();
+	/*
 	build_graph_threaded(tokenized_training_data);
+	*/
 
 	return 0;
 }
