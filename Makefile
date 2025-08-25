@@ -2,7 +2,7 @@ all: build
 	./main.bin
 
 build: clean
-	gcc -g -O3 -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+	gcc -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
 
 build_release: clean
 	gcc -O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG -std=c89 -lpthread main.c -o main.bin

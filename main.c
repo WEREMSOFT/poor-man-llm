@@ -93,7 +93,7 @@ void build_graph_threaded(array_t tokenized_training_data, array_t *graph)
 		pthread_create(&threads[i], NULL, build_graph_slice, &thread_params[i]);
 	}
 
-	for(i = 0; i < 3; i++)
+	for(i = 0; i < PTHREAD_NUM; i++)
 	{
 		pthread_join(threads[i], NULL);
 	}
@@ -142,9 +142,9 @@ int main(void)
 	{
 		graph = array_create(100, sizeof(node_t));
 		/*
-		build_graph(&graph, tokenized_training_data);
-		*/
 		build_graph_threaded(tokenized_training_data, &graph);
+		*/
+		build_graph(&graph, tokenized_training_data);
 		save_graph(graph);
 	}
 
@@ -625,6 +625,11 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 	}
 	
 	posible_initial_nodes = get_nodes_by_key(graph, keys);
+
+	if(posible_initial_nodes.length == 0) 
+	{
+		return;
+	}
 
 	random_index = rand() % posible_initial_nodes.length;
 
