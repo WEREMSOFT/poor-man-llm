@@ -24,6 +24,8 @@ array_t load_graph();
 
 #define PTHREAD_NUM 8
 
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 typedef struct thread_params_t
 {
 	long start;
@@ -53,6 +55,7 @@ void *build_graph_slice(void *params)
 			actual_node.key[j] = *training_token;
 		}
 
+		pthread_mutex_lock(&lock);
 		actual_node_p = get_node_by_key(param->graph, actual_key);
 
 		if(actual_node_p != NULL)
@@ -68,6 +71,7 @@ void *build_graph_slice(void *params)
 		{
 			array_append_element(&parent_node->children, &actual_node.index);
 		}
+		pthread_mutext_unlock(&lock);
 	}
 	
 	return NULL;
@@ -161,12 +165,11 @@ int main(void)
 
 	array_append_element(&words, "Finally");
 
-	stopwatch_start();
 	generate_phrase(words, graph, dictionary, dictionary_indices);
-	stopwatch_stop();
-	/*
+
+	stopwatch_start();
 	build_graph_threaded(tokenized_training_data);
-	*/
+	stopwatch_stop();
 
 	return 0;
 }
