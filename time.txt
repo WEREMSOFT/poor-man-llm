@@ -1,2 +1,2 @@
-Elapsed time: 5979.594310 secs.
-Elapsed time: 441.643045 secs.
+original time: 2144.456238 secs.(35 minutes)
+8 threads, no mutex, no merge: 441.643045 secs.

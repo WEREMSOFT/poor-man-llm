@@ -34,6 +34,96 @@ typedef struct thread_params_t
 	array_t tokenized_training_data; 
 } thread_params_t;
 
+int main(void)
+{
+	array_t graph = {0};
+	array_t tokens = {0};	
+	array_t token_indices = {0};
+
+	array_t dictionary = {0};
+	array_t dictionary_indices = {0};
+
+	array_t tokenized_training_data = {0};
+
+	array_t words = {0};
+
+	long* temp_number, initial_number = 666;
+	array_t temp_array = array_create(2, sizeof(long));
+
+	array_insert_element_at(&temp_array, &initial_number, 0);
+
+	temp_number = array_get_element_at(temp_array, 0);
+
+	return 0;
+
+	stopwatch_start();
+
+	dictionary = array_load_from_disk("model_data/dictionary.arr");
+	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
+	dictionary_indices = array_load_from_disk("model_data/dictionary_indices.arr");
+
+	if(tokenized_training_data.length == 0)
+	{
+		generate_tokens(&tokens, &token_indices, "libro.txt");
+	
+		dictionary = array_create(100, sizeof(char));
+		dictionary_indices = array_create(100, sizeof(long));
+	
+		generate_dictionary(&dictionary, &dictionary_indices, tokens, token_indices);
+	
+		tokenized_training_data = array_create(100, sizeof(long));
+		generate_training_data(&tokenized_training_data, dictionary, dictionary_indices, tokens, token_indices);
+		array_save_to_disk(dictionary, "model_data/dictionary.arr");
+		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
+		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
+	}
+	stopwatch_restart();
+
+	graph = load_graph();
+
+	if(graph.length == 0)
+	{
+		graph = array_create(100, sizeof(node_t));
+		/*
+		build_graph_threaded(tokenized_training_data, &graph);
+		*/
+		build_graph(&graph, tokenized_training_data);
+		save_graph(graph);
+	}
+
+	stopwatch_restart();
+
+	words = array_create(3, sizeof(char*));
+
+	array_append_element(&words, "The");
+	array_append_element(&words, "old");
+
+	generate_phrase(words, graph, dictionary, dictionary_indices);
+
+	printf("\n");
+
+	words = array_destroy(words);
+	words = array_create(3, sizeof(char*));
+
+	array_append_element(&words, "But");
+	array_append_element(&words, "then");
+
+	generate_phrase(words, graph, dictionary, dictionary_indices);
+
+	printf("\n");
+
+	words = array_destroy(words);
+	words = array_create(3, sizeof(char*));
+
+	array_append_element(&words, "Finally");
+
+	generate_phrase(words, graph, dictionary, dictionary_indices);
+
+	stopwatch_stop();
+
+	return 0;
+}
+
 void *build_graph_slice(void *params)
 {
 	long i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
@@ -97,89 +187,6 @@ void build_graph_threaded(array_t tokenized_training_data, array_t *graph)
 	{
 		pthread_join(threads[i], NULL);
 	}
-}
-
-int main(void)
-{
-	array_t graph = {0};
-	array_t tokens = {0};	
-	array_t token_indices = {0};
-
-	array_t dictionary = {0};
-	array_t dictionary_indices = {0};
-
-	array_t tokenized_training_data = {0};
-
-	array_t words = {0};
-
-	stopwatch_start();
-
-	dictionary = array_load_from_disk("model_data/dictionary.arr");
-	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
-	dictionary_indices = array_load_from_disk("model_data/dictionary_indices.arr");
-
-	if(tokenized_training_data.length == 0)
-	{
-		generate_tokens(&tokens, &token_indices, "libro.txt");
-	
-		dictionary = array_create(100, sizeof(char));
-		dictionary_indices = array_create(100, sizeof(long));
-	
-		generate_dictionary(&dictionary, &dictionary_indices, tokens, token_indices);
-	
-		tokenized_training_data = array_create(100, sizeof(long));
-		generate_training_data(&tokenized_training_data, dictionary, dictionary_indices, tokens, token_indices);
-		array_save_to_disk(dictionary, "model_data/dictionary.arr");
-		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
-		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
-	}
-	stopwatch_stop();
-	stopwatch_start();
-
-	graph = load_graph();
-
-	if(graph.length == 0)
-	{
-		graph = array_create(100, sizeof(node_t));
-		/*
-		build_graph_threaded(tokenized_training_data, &graph);
-		*/
-		build_graph(&graph, tokenized_training_data);
-		save_graph(graph);
-	}
-
-	stopwatch_stop();
-	stopwatch_start();
-
-	words = array_create(3, sizeof(char*));
-
-	array_append_element(&words, "The");
-	array_append_element(&words, "old");
-
-	generate_phrase(words, graph, dictionary, dictionary_indices);
-
-	printf("\n");
-
-	words = array_destroy(words);
-	words = array_create(3, sizeof(char*));
-
-	array_append_element(&words, "But");
-	array_append_element(&words, "then");
-
-	generate_phrase(words, graph, dictionary, dictionary_indices);
-
-	printf("\n");
-
-	words = array_destroy(words);
-	words = array_create(3, sizeof(char*));
-
-	array_append_element(&words, "Finally");
-
-	generate_phrase(words, graph, dictionary, dictionary_indices);
-
-	stopwatch_stop();
-
-	return 0;
 }
 
 void print_graph(array_t graph, array_t tokens)

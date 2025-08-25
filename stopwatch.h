@@ -24,4 +24,10 @@ void stopwatch_stop()
 	printf("Elapsed time: %f secs.\n", elapsed_time_in_secs);
 }
 
+void stopwatch_restart()
+{
+	stopwatch_stop();
+	stopwatch_start();
+}
+
 #endif
