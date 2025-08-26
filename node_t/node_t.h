@@ -12,11 +12,6 @@ typedef struct node_t
 	array_t children;
 } node_t;
 
-typedef struct node_m_t
-{
-	array_t children;
-} node_m_t;
-
 node_t node_create()
 {
 	node_t node = {0};

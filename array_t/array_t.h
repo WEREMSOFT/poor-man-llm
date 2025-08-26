@@ -23,8 +23,6 @@ void array_concatenate(struct array_t *that, struct array_t src);
 int array_save_to_disk(array_t array, char* file_name);
 array_t array_load_from_disk(char* file_name);
 array_t array_destroy(array_t array);
-array_t matrix_create(int dimensions, int initial_capacity, size_t element_size);
-
 
 #ifndef ARRAY_MALLOC
 #define ARRAY_MALLOC malloc

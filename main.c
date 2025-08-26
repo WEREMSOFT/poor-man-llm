@@ -10,6 +10,7 @@
 
 #define __ARRAY_T_IMPLEMENTATION__
 #include "array_t/array_t.h"
+#include "matrix_t/matrix_t.h"
 #include "node_t/node_t.h"
 #include "stopwatch.h"
 
@@ -34,6 +35,17 @@ typedef struct thread_params_t
 	array_t tokenized_training_data; 
 } thread_params_t;
 
+void test()
+{
+	long number = 666, coordinates[3] = {1, 1, 1}, *stored_number;
+
+	matrix_t matrix = matrix_create(10, 3, sizeof(long));
+
+	stored_number = matrix_insert_element_at(&matrix,  &number, coordinates);
+
+	stored_number = matrix_get_element_at(matrix, coordinates); 
+}
+
 int main(void)
 {
 	array_t graph = {0};
@@ -47,12 +59,7 @@ int main(void)
 
 	array_t words = {0};
 
-	long* temp_number, initial_number = 666;
-	array_t temp_array = array_create(2, sizeof(long));
-
-	array_insert_element_at(&temp_array, &initial_number, 0);
-
-	temp_number = array_get_element_at(temp_array, 0);
+	test();
 
 	return 0;
 
