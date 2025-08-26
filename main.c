@@ -46,9 +46,26 @@ void test()
 	stored_number = matrix_get_element_at(matrix, coordinates); 
 }
 
+void build_graph_matrix(matrix_t *graph, array_t tokenized_training_data)
+{
+	long i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
+
+	for(i = NODE_NUM_PARAM; i < tokenized_training_data.length - 1; i++)
+	{
+
+	 	for(j = 0; j < NODE_NUM_PARAM; j++)
+		{
+			training_token = array_get_element_at(tokenized_training_data, i - NODE_NUM_PARAM + j);
+			parent_key[j] = *training_token;
+			training_token = array_get_element_at(tokenized_training_data, i + 1 - NODE_NUM_PARAM + j);
+			actual_key[j] = *training_token;
+		}
+	}
+}
+
 int main(void)
 {
-	array_t graph = {0};
+	matrix_t graph = {0};
 	array_t tokens = {0};	
 	array_t token_indices = {0};
 
@@ -58,10 +75,6 @@ int main(void)
 	array_t tokenized_training_data = {0};
 
 	array_t words = {0};
-
-	test();
-
-	return 0;
 
 	stopwatch_start();
 
@@ -86,20 +99,20 @@ int main(void)
 	}
 	stopwatch_restart();
 
-	graph = load_graph();
+	/*graph = load_graph();*/
 
-	if(graph.length == 0)
+	if(graph.data.length == 0)
 	{
-		graph = array_create(100, sizeof(node_t));
+		graph = matrix_create(dictionary.length, dictionary.length, sizeof(array_t));
 		/*
 		build_graph_threaded(tokenized_training_data, &graph);
 		*/
-		build_graph(&graph, tokenized_training_data);
-		save_graph(graph);
+		build_graph_matrix(&graph, tokenized_training_data);
+		/*save_graph(graph);*/
 	}
 
 	stopwatch_restart();
-
+/*
 	words = array_create(3, sizeof(char*));
 
 	array_append_element(&words, "The");
@@ -127,7 +140,7 @@ int main(void)
 	generate_phrase(words, graph, dictionary, dictionary_indices);
 
 	stopwatch_stop();
-
+*/
 	return 0;
 }
 
