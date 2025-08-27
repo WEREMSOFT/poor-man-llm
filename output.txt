@@ -1,0 +1,86 @@
+rm -f *.o
+rm -f *.bin
+rm -f *.out
+gcc -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89  main.c -o main.bin -lpthread -lm
+./main.bin
+Error trying to load array to file model_data/dictionary.arr
+Error trying to load array to file model_data/tokenized_training_data.arr
+Error trying to load array to file model_data/dictionary_indices.arr
+Elapsed time: 0.000048 secs.
+Elapsed time: 0.000000 secs.
+=====v=====
+uno
+dos
+tres
+=====^=====
+cuatro
+3-----^-----
+=====v=====
+dos
+tres
+cuatro
+=====^=====
+uno
+4-----^-----
+=====v=====
+tres
+cuatro
+uno
+=====^=====
+dos
+5-----^-----
+=====v=====
+cuatro
+uno
+dos
+=====^=====
+tres
+6-----^-----
+=====v=====
+uno
+dos
+tres
+=====^=====
+cuatro
+cuatro
+7-----^-----
+=====v=====
+dos
+tres
+cuatro
+=====^=====
+uno
+.
+8-----^-----
+=====
+keys:
+uno
+dos
+tres
+---
+cuatro
+cuatro
+=====
+keys:
+dos
+tres
+cuatro
+---
+uno
+.
+=====
+keys:
+tres
+cuatro
+uno
+---
+dos
+=====
+keys:
+cuatro
+uno
+dos
+---
+tres
+Elapsed time: 0.000024 secs.
+Elapsed time: 0.000002 secs.

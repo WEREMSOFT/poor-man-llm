@@ -21,8 +21,9 @@ void generate_training_data(array_t *training_data, array_t dictionary, array_t 
 void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t dictionary_indices);
 void build_graph(array_t *graph, array_t tokenized_training_data);
 void save_graph(array_t graph);
-array_t load_graph();
+matrix_t load_matrix();
 long get_dictionary_index(array_t* dictionary, array_t* dictionary_indices,  char* token_string);
+void debug_print_word_from_dictionary_index(long training_data_index, array_t dictionary, array_t dictionary_indices);
 
 #define PTHREAD_NUM 8
 
@@ -36,20 +37,9 @@ typedef struct thread_params_t
 	array_t tokenized_training_data; 
 } thread_params_t;
 
-void test()
-{
-	long number = 666, coordinates[3] = {1, 1, 1}, *stored_number;
-
-	matrix_t matrix = matrix_create(10, 3, sizeof(long));
-
-	stored_number = matrix_insert_element_at(&matrix,  &number, coordinates);
-
-	stored_number = matrix_get_element_at(matrix, coordinates); 
-}
-
 long get_dictionary_index_index(array_t* dictionary, array_t* dictionary_indices,  char* token_string)
 {
-	long i, *dictionary_i, return_value;
+	long i, *dictionary_i;
 	char *dictionary_token_string;
 	for(i = 0; i < dictionary_indices->length; i++)
 	{
@@ -107,9 +97,9 @@ void debug_print_teserak(matrix_t matrix, array_t dictionary, array_t dictionary
 				{
 					printf("=====\nkeys:\n");
 					debug_print_word_from_dictionary_index(keys[0], dictionary, dictionary_indices);
-					options = matrix_get_element_at(matrix, keys);
 					debug_print_word_from_dictionary_index(keys[1], dictionary, dictionary_indices);
 					debug_print_word_from_dictionary_index(keys[2], dictionary, dictionary_indices);
+					options = matrix_get_element_at(matrix, keys);
 					printf("---\n");
 				}
 				for(l = 0; l < options->length; l++)
@@ -126,141 +116,30 @@ void build_graph_matrix(matrix_t *matrix, array_t tokenized_training_data, array
 {
 	long i, j, indices[NODE_NUM_PARAM], *dictionary_index, *temp_index;
 	/*==DEBUG==*/
-	long k, *next_word_index;
+	long k;
 
 	array_t *next_words;
 
 	for(i = NODE_NUM_PARAM; i < tokenized_training_data.length; i++)
 	{
 		dictionary_index = array_get_element_at(tokenized_training_data, i);
-		printf("-v-\n");
+		printf("=====v=====\n");
 		for(j = 0; j < NODE_NUM_PARAM; j++)
 		{
 			temp_index = array_get_element_at(tokenized_training_data, i - NODE_NUM_PARAM + j);
-			/* debug_print_word_from_dictionary_index(*temp_index, dictionary, dictionary_indices); */
 			indices[j] = *temp_index;
 			debug_print_word_from_dictionary_index(indices[j], dictionary, dictionary_indices);
 		}
-		printf("-^-\n");
-		debug_print_word_from_dictionary_index(*dictionary_index, dictionary, dictionary_indices);
-		printf("=====\n");
+		printf("=====^=====\n");
 		matrix_insert_element_at(matrix, dictionary_index, indices);
 		next_words = matrix_get_element_at(*matrix, indices);
-		printf("==v==\n");
 		for(k = 0; k < next_words->length; k++)
 		{
-			next_word_index = array_get_element_at(*next_words, k);
-			debug_print_word_from_dictionary_index(*dictionary_index, dictionary, dictionary_indices);
+			temp_index = array_get_element_at(*next_words, k);
+			debug_print_word_from_dictionary_index(*temp_index, dictionary, dictionary_indices);
 		}
-		printf("==^==\n");
+		printf("%ld-----^-----\n", i);
 	}
-	/*
-	long i, j, *training_token, num_params_plus_next = NODE_NUM_PARAM + 1, key[NODE_NUM_PARAM + 1] = {0};
-
-	for(i = num_params_plus_next; i < tokenized_training_data.length - 1; i++)
-	{
-	 	for(j = 0; j < num_params_plus_next; j++)
-		{
-			training_token = array_get_element_at(tokenized_training_data, i - num_params_plus_next + j);
-			key[j] = *training_token;
-		}
-		matrix_insert_element_at(graph, &key[j], key);
-	}*/
-}
-
-array_t *get_possible_starting_arrays(matrix_t matrix, long* coordinates)
-{
-	long lineal_coordinate = 0, i, temp_coordinate, num_coordinates = 0;
-	array_t *element;
-	
-	for(i = 0; i < matrix.dimensions; i++)
-	{
-		temp_coordinate = coordinates[i];
-		if(temp_coordinate == -1)
-		{
-			break;
-		}
-		lineal_coordinate += pow((double)matrix.dimensions, (double)i) + temp_coordinate;
-		num_coordinates++;
-	}
-
-	if(num_coordinates == matrix.dimensions)
-	{
-		return array_get_element_at(matrix.data, lineal_coordinate);
-	}
-
-	return NULL;
-}
-
-void generate_phrase_from_matrix(array_t words, matrix_t matrix, array_t dictionary, array_t dictionary_indices)
-{
-	long i, keys[NODE_NUM_PARAM] = {0}, random_index, *index;
-	array_t* word_indices = {0};
-	char *word;
-
-	srand((unsigned int)time(NULL));
-
-	for(i = 0; i < NODE_NUM_PARAM; i++)
-	{
-		keys[i] = -1;
-	}
-
-	for(i = 0; i < NODE_NUM_PARAM && i < words.length; i++)
-	{
-		word = array_get_element_at(words, i);
-		keys[i] = get_dictionary_index_index(&dictionary, &dictionary_indices, word);
-		debug_print_word_from_dictionary_index(keys[i], dictionary, dictionary_indices);
-	}
-	
-	fflush(stdout);
-	
-	while(true)
-	{
-		word_indices = matrix_get_element_at(matrix, keys);
-
-		if(word_indices->length == 0)
-		{
-			break;
-		}
-		
-		random_index = rand() % word_indices->length;
-		index = array_get_element_at(*word_indices, random_index);
-	
-		word = &((char *)dictionary.data)[*index];
-
-		printf("%s ", word);
-		fflush(stdout);
-
-		if(strcmp(word, ".") == 0)
-		{
-			printf("\n");
-			break;
-		}
-
-		for(i = 0; i < NODE_NUM_PARAM - 1; i++)
-		{
-			keys[i] = keys[i+1];
-		}
-		keys[i] = *index;
-	}
-	
-
-/*
-	while(should_continue)
-	{
-		random_index = rand() % actual_node->children.length;
-		index = array_get_element_at(actual_node->children, random_index);
-		actual_node = array_get_element_at(graph, *index);
-		word = &((char *)dictionary.data)[actual_node->key[NODE_NUM_PARAM - 1]];
-		if(strcmp(word, ".") == 0)
-		{
-			should_continue = false;
-		}
-		printf("%s ", word);
-	}
-*/
-
-	printf("\n");
 }
 
 void debug_print_word_from_dictionary_index(long training_data_index, array_t dictionary, array_t dictionary_indices)
@@ -275,7 +154,6 @@ void debug_print_word_from_dictionary_index(long training_data_index, array_t di
 void debug_print_training_data(array_t training_data, array_t dictionary, array_t dictionary_indices)
 {
 	long i, *index;
-	char *word;
 
 	for (i = 0; i < training_data.length; i++)
 	{
@@ -313,19 +191,16 @@ int main(void)
 		generate_dictionary(&dictionary, &dictionary_indices, tokens, token_indices);
 	
 		tokenized_training_data = array_create(100, sizeof(long));
-		/*generate_training_data(&tokenized_training_data, dictionary, dictionary_indices, tokens, token_indices);*/
 		generate_training_data_with_index(&tokenized_training_data, dictionary, dictionary_indices, tokens, token_indices);
-		/*
 		debug_print_training_data(tokenized_training_data, dictionary, dictionary_indices);
+		/* Save Data */
 		array_save_to_disk(dictionary, "model_data/dictionary.arr");
 		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
-		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");*/
+		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
 	}
 	stopwatch_restart();
 	stopwatch_restart();
-
-	/*graph = load_graph();*/
-
+	
 	if(matrix.data.length == 0)
 	{
 		matrix = matrix_create(dictionary_indices.length, NODE_NUM_PARAM, sizeof(array_t));
@@ -333,10 +208,8 @@ int main(void)
 		build_graph_threaded(tokenized_training_data, &graph);
 		*/
 		build_graph_matrix(&matrix, tokenized_training_data, dictionary, dictionary_indices);
-		printf("#################################################################################################################################################\n");
 		debug_print_teserak(matrix, dictionary, dictionary_indices);
-
-		/*save_graph(graph);*/
+		matrix_save_to_disk(matrix, "model_data/token_teserak.mtx", "model_data/token_teserak.arr");
 	}
 
 	stopwatch_restart();
@@ -347,7 +220,6 @@ int main(void)
 	array_append_element(&words, "man");
 
 	/*
-	
 	generate_phrase_from_matrix(words, matrix, dictionary, dictionary_indices);
 	printf("\n");
 
@@ -767,43 +639,6 @@ void build_graph(array_t *graph, array_t tokenized_training_data)
 		{
 			array_append_element(&parent_node->children, &actual_node.index);
 		}
-	}
-}
-
-array_t load_graph()
-{
-	long i;
-	array_t graph;
-	node_t *node_temp;
-	char file_name[500];
-
-	graph = array_load_from_disk("model_data/graph.arr");
-
-	if(graph.length != 0)
-	{
-		for( i = 0; i < graph.length; i++)
-		{
-			node_temp = array_get_element_at(graph, i);
-			sprintf(file_name, "model_data/token_graph_%ld.arr", i);
-			node_temp->children = array_load_from_disk(file_name);
-		}
-	}
-
-	return graph;
-}
-
-void save_graph(array_t graph)
-{
-	node_t *node_temp;
-	char file_name[500] = {0};
-	long i;
-
-	array_save_to_disk(graph, "model_data/graph.arr");
-	for( i = 0; i < graph.length; i++)
-	{
-		node_temp = array_get_element_at(graph, i);
-		sprintf(file_name, "model_data/token_graph_%ld.arr", i);
-		array_save_to_disk(node_temp->children, file_name);	
 	}
 }
 
