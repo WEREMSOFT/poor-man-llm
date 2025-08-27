@@ -89,7 +89,7 @@ int matrix_save_to_disk(matrix_t matrix, char* matrix_file_name, char* array_fil
 
 	for(i = 0; i < matrix.data.length; i++)
 	{
-		sprintf(file_name, "arr-%ld.arr", i);
+		sprintf(file_name, "model_data/arr-%ld.arr", i);
 		temp_array = array_get_element_at(matrix.data, i);
 		array_save_to_disk(*temp_array, file_name);
 	}
@@ -99,6 +99,10 @@ int matrix_save_to_disk(matrix_t matrix, char* matrix_file_name, char* array_fil
 
 matrix_t matrix_load_from_disk(char* matrix_file_name, char* array_file_name)
 {
+	long i;
+	char file_name[500] = {0};
+	array_t *temp_array;
+
 	matrix_t matrix = {0};
 	
 	FILE *fp = fopen(matrix_file_name, "r");
@@ -109,11 +113,17 @@ matrix_t matrix_load_from_disk(char* matrix_file_name, char* array_file_name)
 		return matrix;
 	}
 
-
 	fread(&matrix, sizeof(matrix_t), 1, fp);
 	fclose(fp);
 
 	matrix.data = array_load_from_disk(array_file_name);
+
+	for(i = 0; i < matrix.data.length; i++)
+	{
+		sprintf(file_name, "model_data/arr-%ld.arr", i);
+		temp_array = array_get_element_at(matrix.data, i);
+		*temp_array = array_load_from_disk(file_name);
+	}
 
 	return matrix;
 }

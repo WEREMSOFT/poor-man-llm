@@ -201,6 +201,8 @@ int main(void)
 	stopwatch_restart();
 	stopwatch_restart();
 	
+	matrix = matrix_load_from_disk("model_data/token_teserak.mtx", "model_data/token_teserak.arr");
+
 	if(matrix.data.length == 0)
 	{
 		matrix = matrix_create(dictionary_indices.length, NODE_NUM_PARAM, sizeof(array_t));
@@ -208,9 +210,9 @@ int main(void)
 		build_graph_threaded(tokenized_training_data, &graph);
 		*/
 		build_graph_matrix(&matrix, tokenized_training_data, dictionary, dictionary_indices);
-		debug_print_teserak(matrix, dictionary, dictionary_indices);
 		matrix_save_to_disk(matrix, "model_data/token_teserak.mtx", "model_data/token_teserak.arr");
-	}
+	} 
+	debug_print_teserak(matrix, dictionary, dictionary_indices);
 
 	stopwatch_restart();
 	words = array_create(3, sizeof(char*));
