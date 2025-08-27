@@ -19,20 +19,33 @@ matrix_t matrix_create(long size, long dimensions, size_t element_size)
 
 	matrix.dimensions = dimensions;
 
-	matrix.data = array_create(size * dimensions, element_size);
+	matrix.data = array_create(pow(size, dimensions), element_size);
+
+	matrix.data.length = matrix.data.capacity;
 
 	return matrix;
+}
+
+long get_lineal_coordinate(long dimensions, long* coordinates)
+{
+	long lineal_coordinate = 0, i, j;
+	
+	j = dimensions;
+	for(i = 0; i < dimensions; i++)
+	{
+		j--;
+		lineal_coordinate += pow((double)dimensions, (double)j) * coordinates[i];
+	}
+
+	return lineal_coordinate;
 }
 
 void* matrix_get_element_at(matrix_t matrix, long *coordinates)
 {
 	void* element = NULL;
-	long lineal_coordinate = 0, i;
+	long lineal_coordinate = 0;
 	
-	for(i = 0; i < matrix.dimensions; i++)
-	{
-		lineal_coordinate += pow((double)matrix.dimensions, (double)i) + coordinates[i];
-	}
+	lineal_coordinate = get_lineal_coordinate(matrix.dimensions, coordinates);
 
 	element = array_get_element_at(matrix.data, lineal_coordinate);
 
@@ -41,14 +54,19 @@ void* matrix_get_element_at(matrix_t matrix, long *coordinates)
 
 void *matrix_insert_element_at(matrix_t *matrix, void *element, long *coordinates)
 {
-	long lineal_coordinate = 0, i;
+	long lineal_coordinate = 0;
+	array_t* long_array = {0};
 	
-	for(i = 0; i < matrix->dimensions; i++)
+	lineal_coordinate = get_lineal_coordinate(matrix->dimensions, coordinates);
+
+	long_array = array_get_element_at(matrix->data, lineal_coordinate);
+
+	if(long_array->data == NULL)
 	{
-		lineal_coordinate += pow(matrix->dimensions, i) + coordinates[i];
+		*long_array = array_create(10, sizeof(long));
 	}
 
-	return array_insert_element_at(&matrix->data, element, lineal_coordinate);
+	return array_append_element(long_array, element);
 }
 
 #endif
