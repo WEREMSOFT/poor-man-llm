@@ -200,30 +200,17 @@ void debug_print_teserak(matrix_t matrix, array_t dictionary, array_t dictionary
 void build_graph_matrix(matrix_t *matrix, array_t tokenized_training_data, array_t dictionary, array_t dictionary_indices)
 {
 	long i, j, indices[NODE_NUM_PARAM], *dictionary_index, *temp_index;
-	/*==DEBUG==*/
-	long k;
-
-	array_t *next_words;
 
 	for(i = NODE_NUM_PARAM; i < tokenized_training_data.length; i++)
 	{
 		dictionary_index = array_get_element_at(tokenized_training_data, i);
-		printf("=====v=====\n");
 		for(j = 0; j < NODE_NUM_PARAM; j++)
 		{
 			temp_index = array_get_element_at(tokenized_training_data, i - NODE_NUM_PARAM + j);
 			indices[j] = *temp_index;
 			debug_print_word_from_dictionary_index(indices[j], dictionary, dictionary_indices);
 		}
-		printf("=====^=====\n");
 		matrix_insert_element_at(matrix, dictionary_index, indices);
-		next_words = matrix_get_element_at(*matrix, indices);
-		for(k = 0; k < next_words->length; k++)
-		{
-			temp_index = array_get_element_at(*next_words, k);
-			debug_print_word_from_dictionary_index(*temp_index, dictionary, dictionary_indices);
-		}
-		printf("%ld-----^-----\n", i);
 	}
 }
 
