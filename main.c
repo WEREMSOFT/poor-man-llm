@@ -500,7 +500,7 @@ void build_graph(array_t *graph, array_t tokenized_training_data)
 		parent_node = get_node_by_key(*graph, parent_key);
 		if(parent_node != NULL)
 		{
-			array_append_element(&parent_node->children, &actual_node.index);
+			array_append_element(&parent_node->children, &actual_node.key);
 		}
 	}
 }
@@ -633,7 +633,10 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 	{
 		random_index = rand() % actual_node->children.length;
 		index = array_get_element_at(actual_node->children, random_index);
-		actual_node = array_get_element_at(graph, *index);
+		actual_node = get_node_by_key(graph, index);
+		 /*
+		 actual_node = array_get_element_at(graph, *index);
+		 */
 		word = &((char *)dictionary.data)[actual_node->key[NODE_NUM_PARAM - 1]];
 		if(strcmp(word, ".") == 0)
 		{
