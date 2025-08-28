@@ -6,9 +6,11 @@
 #include <stdio.h>
 
 clock_t time_start;
-
-void stopwatch_start()
+char *stopwatch_label;
+void stopwatch_start(char *label)
 {
+	stopwatch_label = label;
+	printf("[%s]::Start", label);
 	time_start = clock();
 }
 
@@ -20,8 +22,14 @@ void stopwatch_stop()
 	time_end = clock();
 
 	elapsed_time_in_secs = (double)(time_end - time_start) / CLOCKS_PER_SEC;
-
-	printf("Elapsed time: %f secs.\n", elapsed_time_in_secs);
+	printf("[%s]::Elapsed time: %f secs.\n", stopwatch_label, elapsed_time_in_secs);
 }
+
+void stopwatch_reset(char *label)
+{
+	stopwatch_stop();
+	stopwatch_start(label);
+}
+
 
 #endif

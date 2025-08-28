@@ -22,7 +22,7 @@ void build_graph(array_t *graph, array_t tokenized_training_data);
 void save_graph(array_t graph);
 array_t load_graph();
 
-#define PTHREAD_NUM 8
+#define PTHREAD_NUM 16
 
 typedef struct thread_params_t
 {
@@ -107,13 +107,14 @@ int main(void)
 	array_t tokenized_training_data = {0};
 
 	array_t words = {0};
-
+	stopwatch_start("Loading Training Data");
 	dictionary = array_load_from_disk("model_data/dictionary.arr");
 	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
 	dictionary_indices = array_load_from_disk("model_data/dictionary_indices.arr");
-
+	
 	if(tokenized_training_data.length == 0)
 	{
+		stopwatch_reset("Building Training Data");
 		generate_tokens(&tokens, &token_indices, "libro.txt");
 	
 		dictionary = array_create(100, sizeof(char));
@@ -127,16 +128,23 @@ int main(void)
 		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
 		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
 	}
-
+	stopwatch_reset("Loading Graph");
 	graph = load_graph();
 
 	if(graph.length == 0)
 	{
+		stopwatch_reset("Building Graph");
 		graph = array_create(100, sizeof(node_t));
-		build_graph(&graph, tokenized_training_data);
-		save_graph(graph);
+		/*
+			build_graph(&graph, tokenized_training_data);
+		*/
+		build_graph_threaded(tokenized_training_data);
+		/*
+			save_graph(graph);
+		*/ 
 	}
-
+	stopwatch_stop();
+	return 0;
 	words = array_create(3, sizeof(char*));
 
 	array_append_element(&words, "The");
@@ -160,14 +168,7 @@ int main(void)
 	words = array_create(3, sizeof(char*));
 
 	array_append_element(&words, "Finally");
-
-	stopwatch_start();
 	generate_phrase(words, graph, dictionary, dictionary_indices);
-	stopwatch_stop();
-	/*
-	build_graph_threaded(tokenized_training_data);
-	*/
-
 	return 0;
 }
 
