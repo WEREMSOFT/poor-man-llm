@@ -17,7 +17,7 @@ node_t node_create()
 	node_t node = {0};
 
 	node.key[0] = -1;
-	node.children = array_create(5, sizeof(long));
+	node.children = array_create(5, sizeof(long[NODE_NUM_PARAM]));
 	return node;
 }
 

@@ -115,7 +115,7 @@ int main(void)
 	if(tokenized_training_data.length == 0)
 	{
 		stopwatch_reset("Building Training Data");
-		generate_tokens(&tokens, &token_indices, "libro.txt");
+		generate_tokens(&tokens, &token_indices, "libro_test.txt");
 	
 		dictionary = array_create(100, sizeof(char));
 		dictionary_indices = array_create(100, sizeof(long));
@@ -135,23 +135,23 @@ int main(void)
 	{
 		stopwatch_reset("Building Graph");
 		graph = array_create(100, sizeof(node_t));
+		build_graph(&graph, tokenized_training_data);
 		/*
-			build_graph(&graph, tokenized_training_data);
+			build_graph_threaded(tokenized_training_data);
 		*/
-		build_graph_threaded(tokenized_training_data);
+		save_graph(graph);
 		/*
-			save_graph(graph);
 		*/ 
 	}
 	stopwatch_stop();
-	return 0;
+
 	words = array_create(3, sizeof(char*));
 
-	array_append_element(&words, "The");
-	array_append_element(&words, "old");
+	array_append_element(&words, "uno");
+	array_append_element(&words, "dos");
 
 	generate_phrase(words, graph, dictionary, dictionary_indices);
-
+/*
 	printf("\n");
 
 	words = array_destroy(words);
@@ -169,6 +169,7 @@ int main(void)
 
 	array_append_element(&words, "Finally");
 	generate_phrase(words, graph, dictionary, dictionary_indices);
+*/
 	return 0;
 }
 
