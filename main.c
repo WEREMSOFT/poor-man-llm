@@ -59,14 +59,13 @@ void *build_graph_slice(void *params)
 		{
 			actual_node = *actual_node_p;
 		} else {
-			actual_node.index = param->graph.length;
 			array_append_element(&param->graph, &actual_node);
 		}
 
 		parent_node = get_node_by_key(param->graph, parent_key);
 		if(parent_node != NULL)
 		{
-			array_append_element(&parent_node->children, &actual_node.index);
+			array_append_element(&parent_node->children, &actual_node.key);
 		}
 	}
 	
@@ -493,7 +492,6 @@ void build_graph(array_t *graph, array_t tokenized_training_data)
 		{
 			actual_node = *actual_node_p;
 		} else {
-			actual_node.index = graph->length;
 			array_append_element(graph, &actual_node);
 		}
 

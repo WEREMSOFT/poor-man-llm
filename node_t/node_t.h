@@ -8,7 +8,6 @@
 typedef struct node_t
 {
 	long key[NODE_NUM_PARAM];
-	long index;
 	array_t children;
 } node_t;
 
