@@ -21,8 +21,9 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 void build_graph(array_t *graph, array_t tokenized_training_data);
 void save_graph(array_t graph);
 array_t load_graph();
+void print_graph(array_t graph, array_t tokens);
 
-#define PTHREAD_NUM 16
+#define PTHREAD_NUM 2
 
 typedef struct thread_params_t
 {
@@ -31,6 +32,13 @@ typedef struct thread_params_t
 	array_t graph;
 	array_t tokenized_training_data; 
 } thread_params_t;
+
+typedef struct merge_thread_params_t
+{
+	array_t graph_1;
+	array_t graph_2;
+	array_t result;
+} merge_thread_params_t;
 
 void *build_graph_slice(void *params)
 {
@@ -72,26 +80,94 @@ void *build_graph_slice(void *params)
 	return NULL;
 }
 
-void build_graph_threaded(array_t tokenized_training_data)
+array_t graph_merge(array_t graph_1, array_t graph_2)
 {
-	int i;
+	long i, j;
+	node_t *node_temp, *node_temp_2;
+
+	printf("graph 1: %ld, graph 2: %ld\n", graph_1.length, graph_2.length);
+
+	for(i = 0; i <  graph_2.length; i++)
+	{
+		/*
+		printf("merge progress: %.2f%%\n", ((float)i / (float)graph_2.length) * 100.0);
+		*/
+		node_temp_2 = array_get_element_at(graph_2, i);
+		node_temp = get_node_by_key(graph_1, node_temp_2->key);
+
+		if(node_temp == NULL)
+		{
+			array_append_element(&graph_1, node_temp_2);
+			node_temp = array_get_element_at(graph_1, graph_1.length-1);
+		} else {
+			for(j = 0; j < node_temp_2->children.length; j++)
+			{
+				array_append_element(&node_temp->children, array_get_element_at(node_temp_2->children, j));
+			}
+		}
+
+	}
+
+	return graph_1;
+}
+
+void *merge_pair(void *params)
+{
+	merge_thread_params_t* param = params;
+	param->result = graph_merge(param->graph_1, param->graph_2);
+	return NULL;
+}
+
+array_t build_graph_threaded(array_t tokenized_training_data)
+{
+	long i, j, merged_count;
 	pthread_t threads[PTHREAD_NUM];
 	thread_params_t thread_params[PTHREAD_NUM] = {0};
+	merge_thread_params_t merge_thread_params[PTHREAD_NUM] = {0};
 	long slice_size = tokenized_training_data.length / PTHREAD_NUM;
-
+	
+	array_t graph = {0};
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
 		thread_params[i].start = i * slice_size;
 		thread_params[i].how_many = slice_size;
 		thread_params[i].tokenized_training_data = tokenized_training_data;
-		thread_params[i].graph = array_create(100, sizeof(node_t));
+		thread_params[i].graph = array_create(10, sizeof(node_t));
 		pthread_create(&threads[i], NULL, build_graph_slice, &thread_params[i]);
 	}
-
-	for(i = 0; i < 3; i++)
+	for(i = 0; i < PTHREAD_NUM; i++)
 	{
 		pthread_join(threads[i], NULL);
 	}
+	graph = thread_params[0].graph;
+
+	for(i = 0; i < PTHREAD_NUM; i++)
+	{
+		merge_thread_params[i].result = thread_params[i].graph;
+	}
+
+	merged_count = PTHREAD_NUM;
+	while(merged_count > 0)
+	{
+		j = 0;
+		for(i = 0; i < merged_count; i+=2)
+		{
+			merge_thread_params[j].graph_1 = merge_thread_params[i].result;
+			merge_thread_params[j].graph_2 = merge_thread_params[i + 1].result;
+			pthread_create(&threads[j], NULL, merge_pair, &merge_thread_params[j]);
+			j++;
+		}
+	
+		for(i = 0; i < merged_count / 2; i++)
+		{
+			pthread_join(threads[i], NULL);
+		}
+		merged_count /= 2;
+	}
+
+	graph = merge_thread_params[0].result;
+
+	return graph;
 }
 
 int main(void)
@@ -106,14 +182,13 @@ int main(void)
 	array_t tokenized_training_data = {0};
 
 	array_t words = {0};
-	stopwatch_start("Loading Training Data");
+
 	dictionary = array_load_from_disk("model_data/dictionary.arr");
 	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
 	dictionary_indices = array_load_from_disk("model_data/dictionary_indices.arr");
 	
 	if(tokenized_training_data.length == 0)
 	{
-		stopwatch_reset("Building Training Data");
 		generate_tokens(&tokens, &token_indices, "libro_test.txt");
 	
 		dictionary = array_create(100, sizeof(char));
@@ -127,30 +202,37 @@ int main(void)
 		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
 		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
 	}
-	stopwatch_reset("Loading Graph");
 	graph = load_graph();
 
 	if(graph.length == 0)
 	{
-		stopwatch_reset("Building Graph");
-		graph = array_create(100, sizeof(node_t));
-		build_graph(&graph, tokenized_training_data);
-		/*
-			build_graph_threaded(tokenized_training_data);
-		*/
+
+#ifndef MULTI
+#define MULTI
+#endif
+
+		#ifdef MULTI 
+			printf("multi thread\n");
+			graph = build_graph_threaded(tokenized_training_data);
+		#else
+			printf("single thread\n");
+			graph = array_create(10, sizeof(node_t));
+			build_graph(&graph, tokenized_training_data);
+		#endif
+
 		save_graph(graph);
-		/*
-		*/ 
 	}
-	stopwatch_stop();
+	print_graph(graph, dictionary);
+
+	exit(0);
 
 	words = array_create(3, sizeof(char*));
 
-	array_append_element(&words, "uno");
-	array_append_element(&words, "dos");
-
+	array_append_element(&words, "The");
+	array_append_element(&words, "old");
+	
 	generate_phrase(words, graph, dictionary, dictionary_indices);
-/*
+
 	printf("\n");
 
 	words = array_destroy(words);
@@ -168,7 +250,7 @@ int main(void)
 
 	array_append_element(&words, "Finally");
 	generate_phrase(words, graph, dictionary, dictionary_indices);
-*/
+
 	return 0;
 }
 
@@ -177,10 +259,20 @@ void print_graph(array_t graph, array_t tokens)
 	long i, j;
 	node_t *node, *child_node;
 	
+	printf("Graph Size %ld, Capacity %ld\n", graph.length, graph.capacity);
+
 	for(i = 0; i < graph.length; i++)
 	{
 		node = array_get_element_at(graph, i);
-		printf("%s\n", &((char *)tokens.data)[node->key[0]]);
+		for(j = 0; j < NODE_NUM_PARAM; j++)
+		{
+			if(j > 0) 
+			{
+				printf("-");
+			}
+			printf("%s", &((char *)tokens.data)[node->key[j]]);
+		}
+		printf("\n");
 		for(j = 0; j < node->children.length; j++)
 		{
 			child_node = array_get_element_at(node->children, j);
@@ -625,6 +717,7 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 	{
 		word = &((char *)dictionary.data)[actual_node->key[i]];
 		printf("%s ", word);
+		fflush(stdout);
 	}
 
 	while(should_continue)
@@ -641,6 +734,7 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 			should_continue = false;
 		}
 		printf("%s ", word);
+		fflush(stdout);
 	}
 	printf("\n");
 }

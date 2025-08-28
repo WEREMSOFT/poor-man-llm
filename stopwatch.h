@@ -10,7 +10,7 @@ char *stopwatch_label;
 void stopwatch_start(char *label)
 {
 	stopwatch_label = label;
-	printf("[%s]::Start", label);
+	printf("[%s]::Start\n", label);
 	time_start = clock();
 }
 
