@@ -1,0 +1,48 @@
+rm -f *.o
+rm -f *.bin
+rm -f *.out
+rm -rf model_data
+mkdir model_data
+touch model_data/.gitkeep
+gcc  -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+./main.bin
+Error trying to load array to file model_data/dictionary.arr
+Error trying to load array to file model_data/tokenized_training_data.arr
+Error trying to load array to file model_data/dictionary_indices.arr
+single thread
+===================================
+################
+Graph Size 13, Capacity 20
+dos-tres-cuatro
+	cinco
+	cinco
+tres-cuatro-cinco
+	seis
+	seis
+cuatro-cinco-seis
+	siete
+	siete
+cinco-seis-siete
+	.
+seis-siete-.
+	uno
+siete-.-uno
+	dos
+.-uno-dos
+	tres
+	tres
+uno-dos-tres
+	50
+	cuatro
+dos-tres-50
+	60
+tres-50-60
+	70
+50-60-70
+	.
+60-70-.
+	uno
+70-.-uno
+	dos
+uno dos tres cuatro cinco seis siete . 
+

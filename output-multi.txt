@@ -1,0 +1,81 @@
+rm -f *.o
+rm -f *.bin
+rm -f *.out
+rm -rf model_data
+mkdir model_data
+touch model_data/.gitkeep
+gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+./main.bin
+Error trying to load array to file model_data/dictionary.arr
+Error trying to load array to file model_data/tokenized_training_data.arr
+Error trying to load array to file model_data/dictionary_indices.arr
+multi thread
+WWWWWWWWWWWWWWWWWWWWWW
+start: 0, how_many: 12, graph_size: 10, training_data_size: 23
+start: 12, how_many: 11, graph_size: 10, training_data_size: 23
+################
+Graph Size 7, Capacity 10
+70-.-uno
+	dos
+.-uno-dos
+	tres
+uno################
+Graph Size 8, Capacity 10
+dos-tres-cuatro
+	cinco
+tres-cuatro-cinco
+	seis
+cuatro-cinco-seis
+	siete
+cinco-seis-siete
+	.
+seis-siete-.
+	uno
+siete-.-uno
+	dos
+.-uno-dos
+	tres
+uno-dos-tres
+-dos-tres
+	cuatro
+dos-tres-cuatro
+	cinco
+tres-cuatro-cinco
+	seis
+cuatro-cinco-seis
+	siete
+cinco-seis-siete
+WWWWWWWWWWWWWWWWWWWWWW
+graph 1: 8, graph 2: 7
+graph 1: 9, graph 2: 7
+------------------------
+################
+Graph Size 9, Capacity 10
+dos-tres-cuatro
+	cinco
+	cinco
+	cinco
+tres-cuatro-cinco
+	seis
+	seis
+	seis
+cuatro-cinco-seis
+	siete
+	siete
+	siete
+cinco-seis-siete
+	.
+seis-siete-.
+	uno
+siete-.-uno
+	dos
+.-uno-dos
+	tres
+	tres
+	tres
+uno-dos-tres
+	cuatro
+	cuatro
+70-.-uno
+	dos
+	dos
