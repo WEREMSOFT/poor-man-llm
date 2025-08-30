@@ -7,8 +7,8 @@
 
 typedef struct array_t
 {
-    long length;
-	long capacity;
+    int length;
+	int capacity;
     size_t elementSize;
     void* data;
 } array_t;

@@ -7,7 +7,7 @@
 
 typedef struct node_t
 {
-	long key[NODE_NUM_PARAM];
+	int key[NODE_NUM_PARAM];
 	array_t children;
 } node_t;
 

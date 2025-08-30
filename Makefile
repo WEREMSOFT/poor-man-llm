@@ -5,6 +5,9 @@ endif
 all: build
 	./main.bin
 
+build_vscode: clean clean_data
+	gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+
 build: clean clean_data
 	gcc $(CFLAGS) -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
 
