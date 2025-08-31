@@ -43,6 +43,12 @@ typedef struct merge_thread_params_t
 	array_t result;
 } merge_thread_params_t;
 
+/*
+DEBUG
+*/
+
+array_t dic;
+
 void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int start, int end)
 {
 	int i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
@@ -61,6 +67,9 @@ void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int sta
 			actual_node.key[j] = *training_token;
 		}
 
+		printf("%d --> ", parent_key[0]);
+		print_word(dic, parent_key[0]);
+
 		actual_node_p = get_node_by_key(*graph, actual_key);
 
 		if(actual_node_p != NULL)
@@ -74,19 +83,17 @@ void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int sta
 		if(parent_node != NULL)
 		{
 			array_append_element(&parent_node->children, &actual_node.key);
-		}	
+		}
 	}
 }
 
 void *build_graph_slice(void *params)
 {
-	int i;
 	thread_params_t *param = params;
 
 	printf("start: %d, how_many: %d, graph_size: %d, training_data_size: %d\n", param->start, param->how_many, param->graph.capacity, param->tokenized_training_data.length);
-	
-	build_graph_slice2(&param->graph, param->tokenized_training_data, param->start, param->start + param->how_many);
 
+	build_graph_slice2(&param->graph, param->tokenized_training_data, param->start, param->start + param->how_many);
 	print_graph(param->graph, param->dictionary);
 
 	return NULL;
@@ -138,19 +145,21 @@ array_t build_graph_threaded(array_t tokenized_training_data, array_t dictionary
 	merge_thread_params_t merge_thread_params[PTHREAD_NUM] = {0};
 	int slice_size = tokenized_training_data.length / PTHREAD_NUM;
 	int reminder = tokenized_training_data.length % PTHREAD_NUM;
-
 	array_t graph = {0};
 	int start = 0;
 	printf("WWWWWWWWWWWWWWWWWWWWWW\n");
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
 		thread_params[i].start = start;
-		thread_params[i].how_many = slice_size + (i < reminder ? 1 : 0);
+		thread_params[i].how_many = slice_size + (i <= reminder ? 1 : 0);
 		thread_params[i].tokenized_training_data = tokenized_training_data;
 		thread_params[i].graph = array_create(10, sizeof(node_t));
 		thread_params[i].dictionary = dictionary;
-		start = thread_params[i].start + thread_params[i].how_many;
+		start = start + thread_params[i].how_many;
+		/*
 		pthread_create(&threads[i], NULL, build_graph_slice, &thread_params[i]);
+		*/
+		build_graph_slice(&thread_params[i]);
 	}
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
@@ -226,6 +235,7 @@ int main(void)
 		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
 	}
 	
+	dic = dictionary;
 	/*
 	graph = load_graph();
 	*/

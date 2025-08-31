@@ -12,7 +12,13 @@ Error trying to load array to file model_data/dictionary_indices.arr
 single thread
 ===================================
 ################
-Graph Size 13, Capacity 20
+Graph Size 21, Capacity 40
+uno-dos-tres
+	cuatro
+	50
+	cuatro
+	80
+	110
 dos-tres-cuatro
 	cinco
 	cinco
@@ -24,16 +30,18 @@ cuatro-cinco-seis
 	siete
 cinco-seis-siete
 	.
+	.
 seis-siete-.
 	uno
+	uno
 siete-.-uno
+	dos
 	dos
 .-uno-dos
 	tres
 	tres
-uno-dos-tres
-	50
-	cuatro
+	tres
+	tres
 dos-tres-50
 	60
 tres-50-60
@@ -44,5 +52,20 @@ tres-50-60
 	uno
 70-.-uno
 	dos
-uno dos tres cuatro cinco seis siete . 
+dos-tres-80
+	90
+tres-80-90
+	100
+80-90-100
+	.
+90-100-.
+	uno
+100-.-uno
+	dos
+dos-tres-110
+	120
+tres-110-120
+	130
+110-120-130
+uno dos tres 80 90 100 . 
 
