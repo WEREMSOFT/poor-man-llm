@@ -125,7 +125,7 @@ void* array_append_element(array_t *that, void *element)
 
     memmove((char *)that->data + that->elementSize * that->length, element, that->elementSize);
     that->length++;
-	return (char *)(that->data + that->elementSize * (that->length - 1));
+	return (char *)((char *)that->data + that->elementSize * (that->length - 1));
 }
 
 void array_insert_element_at(array_t *that, void *element, int index)

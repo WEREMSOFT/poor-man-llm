@@ -1,0 +1,15 @@
+Multi 16 cores
+Wall clock elapsed time in secconds 804
+text:
+The old man pushed him aside, and, kneeling down, ran his fingers over Dick's bruised, bony little person . 
+But then he went on talking just the same . 
+Finally we stopped flitting and lit . 
+==========================
+Single:
+Wall clock elapsed time in secconds 1437
+Text:
+The old black, not in any very high glee at having been previously secured by her—and then hoisting everything to her side, and stacking her canvas high up, and sideways outstretching it with stun-sails, like the double-jointed wings of an albatross; the Pequod bore down in the ship’s full middle, all her keel and her three masts before me . 
+
+But then there were promise in the voyage . 
+
+Finally the cabin door . 

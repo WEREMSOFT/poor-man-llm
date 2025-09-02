@@ -25,7 +25,7 @@ array_t load_graph();
 void print_graph(array_t graph, array_t tokens);
 void print_word(array_t tokens, int index);
 
-#define PTHREAD_NUM 2
+#define PTHREAD_NUM 16
 
 typedef struct thread_params_t
 {
@@ -80,20 +80,6 @@ void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int sta
 			}
 		}
 
-		
-		printf("---PARENT--\n");
-		for(j = 0; j < NODE_NUM_PARAM && i > 0; j++)
-		{
-			printf("%d --> ", parent_key[j]);
-			print_word(dic, parent_key[j]);
-		}
-		printf("---CHILD--\n");
-		for(j = 0; j < NODE_NUM_PARAM; j++)
-		{
-			printf("%d --> ", actual_key[j]);
-			print_word(dic, actual_key[j]);
-		}
-
 		actual_node_p = get_node_by_key(*graph, actual_key);
 
 		if(actual_node_p != NULL)
@@ -128,8 +114,6 @@ void *build_graph_slice(void *params)
 	printf("start: %d, end: %d, graph_size: %d, training_data_size: %d\n", param->start, param->end, param->graph.capacity, param->tokenized_training_data.length);
 
 	build_graph_slice2(&param->graph, param->tokenized_training_data, param->start, param->end);
-	print_graph(param->graph, param->dictionary);
-
 	return NULL;
 }
 
@@ -190,18 +174,16 @@ array_t build_graph_threaded(array_t tokenized_training_data, array_t dictionary
 		thread_params[i].graph = array_create(10, sizeof(node_t));
 		thread_params[i].dictionary = dictionary;
 		start = thread_params[i].end;
-		/*
 		pthread_create(&threads[i], NULL, build_graph_slice, &thread_params[i]);
-		*/
-		build_graph_slice(&thread_params[i]);
+		
 	}
 	printf("WWWWWWWWWWWWWWWWWWWWWW\n");
-/*
-for(i = 0; i < PTHREAD_NUM; i++)
-{
-	 pthread_join(threads[i], NULL);
-}
-*/
+	
+	for(i = 0; i < PTHREAD_NUM; i++)
+	{
+		pthread_join(threads[i], NULL);
+	}
+
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
 		merge_thread_params[i].result = thread_params[i].graph;
@@ -215,24 +197,19 @@ for(i = 0; i < PTHREAD_NUM; i++)
 		{
 			merge_thread_params[j].graph_1 = merge_thread_params[i].result;
 			merge_thread_params[j].graph_2 = merge_thread_params[i + 1].result;
-			/*
 			pthread_create(&threads[j], NULL, merge_pair, &merge_thread_params[j]);
-			*/
-			merge_thread_params[j].result = graph_merge(merge_thread_params[j].graph_1, merge_thread_params[j].graph_2);
 			j++;
 		}
-		/*
+
 		for(i = 0; i < merged_count / 2; i++)
 		{
 			pthread_join(threads[i], NULL);
 		}
-		*/
+
 		merged_count /= 2;
 	}
 
 	graph = merge_thread_params[0].result;
-	printf("------------------------\n");
-	print_graph(graph, dictionary);
 	return graph;
 }
 
@@ -249,13 +226,15 @@ int main(void)
 
 	array_t words = {0};
 
+	stopwatch_wall_clock_start("LLM Training");
+
 	dictionary = array_load_from_disk("model_data/dictionary.arr");
 	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
 	dictionary_indices = array_load_from_disk("model_data/dictionary_indices.arr");
 	
 	if(tokenized_training_data.length == 0)
 	{
-		generate_tokens(&tokens, &token_indices, "libro_test.txt");
+		generate_tokens(&tokens, &token_indices, "libro.txt");
 	
 		dictionary = array_create(100, sizeof(char));
 		dictionary_indices = array_create(100, sizeof(int));
@@ -270,9 +249,8 @@ int main(void)
 	}
 	
 	dic = dictionary;
-	/*
+
 	graph = load_graph();
-	*/
 
 	if(graph.length == 0)
 	{
@@ -283,22 +261,10 @@ int main(void)
 			printf("single thread\n");
 			graph = array_create(10, sizeof(node_t));
 			build_graph_slice2(&graph, tokenized_training_data, 0, tokenized_training_data.length);
-			/*
-			build_graph(&graph, tokenized_training_data);
-			*/
 		#endif
 
 		save_graph(graph);
 	}
-	printf("===================================\n");
-	print_graph(graph, dictionary);
-
-	words = array_create(3, sizeof(char*));
-
-	array_append_element(&words, "uno");
-	generate_phrase(words, graph, dictionary, dictionary_indices);
-	printf("\n");
-	exit(0);
 
 	words = array_create(3, sizeof(char*));
 
@@ -324,6 +290,8 @@ int main(void)
 
 	array_append_element(&words, "Finally");
 	generate_phrase(words, graph, dictionary, dictionary_indices);
+
+	stopwatch_wall_clock_stop();
 
 	return 0;
 }
