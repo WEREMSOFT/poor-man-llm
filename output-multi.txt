@@ -11,27 +11,167 @@ Error trying to load array to file model_data/tokenized_training_data.arr
 Error trying to load array to file model_data/dictionary_indices.arr
 multi thread
 WWWWWWWWWWWWWWWWWWWWWW
-start: 0, how_many: 19, graph_size: 10, training_data_size: 37
+start: 0, end: 19, graph_size: 10, training_data_size: 37
+---PARENT--
+---CHILD--
 0 --> uno
+4 --> dos
+8 --> tres
+---PARENT--
+0 --> uno
+4 --> dos
+8 --> tres
+---CHILD--
 4 --> dos
 8 --> tres
 13 --> cuatro
+---PARENT--
+4 --> dos
+8 --> tres
+13 --> cuatro
+---CHILD--
+8 --> tres
+13 --> cuatro
+20 --> cinco
+---PARENT--
+8 --> tres
+13 --> cuatro
+20 --> cinco
+---CHILD--
+13 --> cuatro
+20 --> cinco
+26 --> seis
+---PARENT--
+13 --> cuatro
+20 --> cinco
+26 --> seis
+---CHILD--
 20 --> cinco
 26 --> seis
 31 --> siete
+---PARENT--
+20 --> cinco
+26 --> seis
+31 --> siete
+---CHILD--
+26 --> seis
+31 --> siete
+37 --> .
+---PARENT--
+26 --> seis
+31 --> siete
+37 --> .
+---CHILD--
+31 --> siete
+37 --> .
+0 --> uno
+---PARENT--
+31 --> siete
+37 --> .
+0 --> uno
+---CHILD--
 37 --> .
 0 --> uno
 4 --> dos
+---PARENT--
+37 --> .
+0 --> uno
+4 --> dos
+---CHILD--
+0 --> uno
+4 --> dos
+8 --> tres
+---PARENT--
+0 --> uno
+4 --> dos
+8 --> tres
+---CHILD--
+4 --> dos
+8 --> tres
+39 --> 50
+---PARENT--
+4 --> dos
+8 --> tres
+39 --> 50
+---CHILD--
 8 --> tres
 39 --> 50
 42 --> 60
+---PARENT--
+8 --> tres
+39 --> 50
+42 --> 60
+---CHILD--
+39 --> 50
+42 --> 60
+45 --> 70
+---PARENT--
+39 --> 50
+42 --> 60
+45 --> 70
+---CHILD--
+42 --> 60
 45 --> 70
 37 --> .
+---PARENT--
+42 --> 60
+45 --> 70
+37 --> .
+---CHILD--
+45 --> 70
+37 --> .
+0 --> uno
+---PARENT--
+45 --> 70
+37 --> .
+0 --> uno
+---CHILD--
+37 --> .
+0 --> uno
+4 --> dos
+---PARENT--
+37 --> .
+0 --> uno
+4 --> dos
+---CHILD--
+0 --> uno
+4 --> dos
+8 --> tres
+---PARENT--
+0 --> uno
+4 --> dos
+8 --> tres
+---CHILD--
+4 --> dos
+8 --> tres
+13 --> cuatro
+---PARENT--
+4 --> dos
+8 --> tres
+13 --> cuatro
+---CHILD--
+8 --> tres
+13 --> cuatro
+20 --> cinco
+---PARENT--
+8 --> tres
+13 --> cuatro
+20 --> cinco
+---CHILD--
+13 --> cuatro
+20 --> cinco
+26 --> seis
 ################
 Graph Size 13, Capacity 20
+uno-dos-tres
+	cuatro
+	50
+	cuatro
 dos-tres-cuatro
 	cinco
+	cinco
 tres-cuatro-cinco
+	seis
 	seis
 cuatro-cinco-seis
 	siete
@@ -44,8 +184,6 @@ siete-.-uno
 .-uno-dos
 	tres
 	tres
-uno-dos-tres
-	50
 dos-tres-50
 	60
 tres-50-60
@@ -56,24 +194,139 @@ tres-50-60
 	uno
 70-.-uno
 	dos
-start: 19, how_many: 19, graph_size: 10, training_data_size: 37
+start: 19, end: 37, graph_size: 10, training_data_size: 37
+---PARENT--
+13 --> cuatro
+20 --> cinco
+26 --> seis
+---CHILD--
 20 --> cinco
 26 --> seis
 31 --> siete
+---PARENT--
+20 --> cinco
+26 --> seis
+31 --> siete
+---CHILD--
+26 --> seis
+31 --> siete
+37 --> .
+---PARENT--
+26 --> seis
+31 --> siete
+37 --> .
+---CHILD--
+31 --> siete
 37 --> .
 0 --> uno
+---PARENT--
+31 --> siete
+37 --> .
+0 --> uno
+---CHILD--
+37 --> .
+0 --> uno
+4 --> dos
+---PARENT--
+37 --> .
+0 --> uno
+4 --> dos
+---CHILD--
+0 --> uno
+4 --> dos
+8 --> tres
+---PARENT--
+0 --> uno
+4 --> dos
+8 --> tres
+---CHILD--
 4 --> dos
 8 --> tres
 48 --> 80
+---PARENT--
+4 --> dos
+8 --> tres
+48 --> 80
+---CHILD--
+8 --> tres
+48 --> 80
+51 --> 90
+---PARENT--
+8 --> tres
+48 --> 80
+51 --> 90
+---CHILD--
+48 --> 80
+51 --> 90
+54 --> 100
+---PARENT--
+48 --> 80
+51 --> 90
+54 --> 100
+---CHILD--
 51 --> 90
 54 --> 100
 37 --> .
+---PARENT--
+51 --> 90
+54 --> 100
+37 --> .
+---CHILD--
+54 --> 100
+37 --> .
+0 --> uno
+---PARENT--
+54 --> 100
+37 --> .
+0 --> uno
+---CHILD--
+37 --> .
+0 --> uno
+4 --> dos
+---PARENT--
+37 --> .
+0 --> uno
+4 --> dos
+---CHILD--
 0 --> uno
 4 --> dos
 8 --> tres
+---PARENT--
+0 --> uno
+4 --> dos
+8 --> tres
+---CHILD--
+4 --> dos
+8 --> tres
 58 --> 110
+---PARENT--
+4 --> dos
+8 --> tres
+58 --> 110
+---CHILD--
+8 --> tres
+58 --> 110
+62 --> 120
+---PARENT--
+8 --> tres
+58 --> 110
+62 --> 120
+---CHILD--
+58 --> 110
+62 --> 120
+66 --> 130
+---PARENT--
+58 --> 110
+62 --> 120
+66 --> 130
+---CHILD--
+62 --> 120
+66 --> 130
+37 --> .
 ################
-Graph Size 13, Capacity 20
+Graph Size 14, Capacity 20
+cinco-seis-siete
+	.
 seis-siete-.
 	uno
 siete-.-uno
@@ -102,72 +355,5 @@ tres-110-120
 	.
 120-130-.
 WWWWWWWWWWWWWWWWWWWWWW
-graph 1: 13, graph 2: 13
-graph 1: 22, graph 2: 13
-------------------------
 ################
-Graph Size 22, Capacity 40
-dos-tres-cuatro
-	cinco
-tres-cuatro-cinco
-	seis
-cuatro-cinco-seis
-	siete
-cinco-seis-siete
-	.
-seis-siete-.
-	uno
-	uno
-	uno
-siete-.-uno
-	dos
-	dos
-	dos
-.-uno-dos
-	tres
-	tres
-	tres
-	tres
-	tres
-	tres
-uno-dos-tres
-	50
-	80
-	110
-	80
-	110
-dos-tres-50
-	60
-tres-50-60
-	70
-50-60-70
-	.
-60-70-.
-	uno
-70-.-uno
-	dos
-dos-tres-80
-	90
-	90
-tres-80-90
-	100
-	100
-80-90-100
-	.
-	.
-90-100-.
-	uno
-	uno
-100-.-uno
-	dos
-	dos
-dos-tres-110
-	120
-	120
-tres-110-120
-	130
-	130
-110-120-130
-	.
-	.
-120-130-.
+Graph Size 0, Capacity 0

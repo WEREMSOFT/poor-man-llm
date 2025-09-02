@@ -30,7 +30,7 @@ void print_word(array_t tokens, int index);
 typedef struct thread_params_t
 {
 	int start;
-	int how_many;
+	int end;
 	array_t graph;
 	array_t tokenized_training_data; 
 	array_t dictionary;
@@ -54,21 +54,45 @@ void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int sta
 	int i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
 	node_t actual_node = {0}, *parent_node, *actual_node_p;
 
-	for(i = start + NODE_NUM_PARAM; i < end - 1; i++)
+	/*
+	uninitialized
+	*/ 
+	parent_key[0] = -1;
+
+	for(i = start; i < end; i++)
 	{
 		actual_node = node_create();
 
 		for(j = 0; j < NODE_NUM_PARAM; j++)
 		{
-			training_token = array_get_element_at(tokenized_training_data, i - NODE_NUM_PARAM + j);
-			parent_key[j] = *training_token;
-			training_token = array_get_element_at(tokenized_training_data, i + 1 - NODE_NUM_PARAM + j);
+			training_token = array_get_element_at(tokenized_training_data, i + j);
+			
+			if(training_token == NULL) 
+				return;
+			
 			actual_key[j] = *training_token;
 			actual_node.key[j] = *training_token;
+			
+			if(i > 0)
+			{
+				training_token = array_get_element_at(tokenized_training_data, i + j - 1);
+				parent_key[j] = *training_token;
+			}
 		}
 
-		printf("%d --> ", parent_key[0]);
-		print_word(dic, parent_key[0]);
+		
+		printf("---PARENT--\n");
+		for(j = 0; j < NODE_NUM_PARAM && i > 0; j++)
+		{
+			printf("%d --> ", parent_key[j]);
+			print_word(dic, parent_key[j]);
+		}
+		printf("---CHILD--\n");
+		for(j = 0; j < NODE_NUM_PARAM; j++)
+		{
+			printf("%d --> ", actual_key[j]);
+			print_word(dic, actual_key[j]);
+		}
 
 		actual_node_p = get_node_by_key(*graph, actual_key);
 
@@ -91,9 +115,9 @@ void *build_graph_slice(void *params)
 {
 	thread_params_t *param = params;
 
-	printf("start: %d, how_many: %d, graph_size: %d, training_data_size: %d\n", param->start, param->how_many, param->graph.capacity, param->tokenized_training_data.length);
+	printf("start: %d, end: %d, graph_size: %d, training_data_size: %d\n", param->start, param->end, param->graph.capacity, param->tokenized_training_data.length);
 
-	build_graph_slice2(&param->graph, param->tokenized_training_data, param->start, param->start + param->how_many);
+	build_graph_slice2(&param->graph, param->tokenized_training_data, param->start, param->end);
 	print_graph(param->graph, param->dictionary);
 
 	return NULL;
@@ -151,21 +175,25 @@ array_t build_graph_threaded(array_t tokenized_training_data, array_t dictionary
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
 		thread_params[i].start = start;
-		thread_params[i].how_many = slice_size + (i <= reminder ? 1 : 0);
+		thread_params[i].end = start + slice_size + (i < reminder ? 1 : 0);
 		thread_params[i].tokenized_training_data = tokenized_training_data;
 		thread_params[i].graph = array_create(10, sizeof(node_t));
 		thread_params[i].dictionary = dictionary;
-		start = start + thread_params[i].how_many;
+		start = thread_params[i].end;
 		/*
 		pthread_create(&threads[i], NULL, build_graph_slice, &thread_params[i]);
 		*/
 		build_graph_slice(&thread_params[i]);
 	}
+	printf("WWWWWWWWWWWWWWWWWWWWWW\n");
+	print_graph(graph, dictionary);
+
+	return graph;
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
-		pthread_join(threads[i], NULL);
+		 pthread_join(threads[i], NULL);
 	}
-	printf("WWWWWWWWWWWWWWWWWWWWWW\n");
+
 
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
@@ -245,6 +273,7 @@ int main(void)
 		#ifdef MULTI 
 			printf("multi thread\n");
 			graph = build_graph_threaded(tokenized_training_data, dictionary);
+			return -1;
 		#else
 			printf("single thread\n");
 			graph = array_create(10, sizeof(node_t));
@@ -296,6 +325,11 @@ int main(void)
 
 void print_word(array_t tokens, int index)
 {
+	if(index < 0) 
+	{
+		printf("\n");
+		return;
+	}
 	printf("%s\n", &((char *)tokens.data)[index]);
 }
 
