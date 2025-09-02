@@ -324,9 +324,11 @@ start: 19, end: 37, graph_size: 10, training_data_size: 37
 66 --> 130
 37 --> .
 ################
-Graph Size 14, Capacity 20
+Graph Size 15, Capacity 20
 cinco-seis-siete
 	.
+cuatro-cinco-seis
+	siete
 seis-siete-.
 	uno
 siete-.-uno
@@ -355,5 +357,124 @@ tres-110-120
 	.
 120-130-.
 WWWWWWWWWWWWWWWWWWWWWW
+graph 1: 13, graph 2: 15
+------------------------
 ################
-Graph Size 0, Capacity 0
+Graph Size 22, Capacity 40
+uno-dos-tres
+	cuatro
+	50
+	cuatro
+	80
+	110
+dos-tres-cuatro
+	cinco
+	cinco
+tres-cuatro-cinco
+	seis
+	seis
+cuatro-cinco-seis
+	siete
+	siete
+cinco-seis-siete
+	.
+	.
+seis-siete-.
+	uno
+	uno
+siete-.-uno
+	dos
+	dos
+.-uno-dos
+	tres
+	tres
+	tres
+	tres
+dos-tres-50
+	60
+tres-50-60
+	70
+50-60-70
+	.
+60-70-.
+	uno
+70-.-uno
+	dos
+dos-tres-80
+	90
+tres-80-90
+	100
+80-90-100
+	.
+90-100-.
+	uno
+100-.-uno
+	dos
+dos-tres-110
+	120
+tres-110-120
+	130
+110-120-130
+	.
+120-130-.
+===================================
+################
+Graph Size 22, Capacity 40
+uno-dos-tres
+	cuatro
+	50
+	cuatro
+	80
+	110
+dos-tres-cuatro
+	cinco
+	cinco
+tres-cuatro-cinco
+	seis
+	seis
+cuatro-cinco-seis
+	siete
+	siete
+cinco-seis-siete
+	.
+	.
+seis-siete-.
+	uno
+	uno
+siete-.-uno
+	dos
+	dos
+.-uno-dos
+	tres
+	tres
+	tres
+	tres
+dos-tres-50
+	60
+tres-50-60
+	70
+50-60-70
+	.
+60-70-.
+	uno
+70-.-uno
+	dos
+dos-tres-80
+	90
+tres-80-90
+	100
+80-90-100
+	.
+90-100-.
+	uno
+100-.-uno
+	dos
+dos-tres-110
+	120
+tres-110-120
+	130
+110-120-130
+	.
+120-130-.
+uno dos tres 110 120 130 . 
+

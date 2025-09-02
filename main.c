@@ -52,7 +52,7 @@ array_t dic;
 void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int start, int end)
 {
 	int i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
-	node_t actual_node = {0}, *parent_node, *actual_node_p;
+	node_t actual_node = {0}, parent_node = {0}, *parent_node_p, *actual_node_p;
 
 	/*
 	uninitialized
@@ -103,10 +103,20 @@ void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int sta
 			array_append_element(graph, &actual_node);
 		}
 
-		parent_node = get_node_by_key(*graph, parent_key);
-		if(parent_node != NULL)
+		parent_node_p = get_node_by_key(*graph, parent_key);
+		if(parent_node_p != NULL)
 		{
-			array_append_element(&parent_node->children, &actual_node.key);
+			array_append_element(&parent_node_p->children, &actual_node.key);
+		} else if(parent_key[0] != -1)
+		{
+			parent_node = node_create();
+			for(j = 0; j < NODE_NUM_PARAM; j++)
+			{
+				parent_node.key[j] = parent_key[j];
+			}
+			parent_node_p = &parent_node;
+			parent_node_p = array_append_element(graph, parent_node_p);
+			array_append_element(&parent_node_p->children, &actual_node.key);
 		}
 	}
 }
@@ -186,22 +196,19 @@ array_t build_graph_threaded(array_t tokenized_training_data, array_t dictionary
 		build_graph_slice(&thread_params[i]);
 	}
 	printf("WWWWWWWWWWWWWWWWWWWWWW\n");
-	print_graph(graph, dictionary);
-
-	return graph;
-	for(i = 0; i < PTHREAD_NUM; i++)
-	{
-		 pthread_join(threads[i], NULL);
-	}
-
-
+/*
+for(i = 0; i < PTHREAD_NUM; i++)
+{
+	 pthread_join(threads[i], NULL);
+}
+*/
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
 		merge_thread_params[i].result = thread_params[i].graph;
 	}
 	
 	merged_count = PTHREAD_NUM;
-	while(merged_count > 0)
+	while(merged_count > 1)
 	{
 		j = 0;
 		for(i = 0; i < merged_count; i+=2)
@@ -226,7 +233,6 @@ array_t build_graph_threaded(array_t tokenized_training_data, array_t dictionary
 	graph = merge_thread_params[0].result;
 	printf("------------------------\n");
 	print_graph(graph, dictionary);
-	exit(-1);
 	return graph;
 }
 
@@ -273,7 +279,6 @@ int main(void)
 		#ifdef MULTI 
 			printf("multi thread\n");
 			graph = build_graph_threaded(tokenized_training_data, dictionary);
-			return -1;
 		#else
 			printf("single thread\n");
 			graph = array_create(10, sizeof(node_t));

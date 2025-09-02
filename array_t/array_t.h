@@ -15,7 +15,7 @@ typedef struct array_t
 
 
 array_t array_create(int initialCapacity, size_t elementSize);
-void array_append_element(struct array_t *that, void *element);
+void* array_append_element(struct array_t *that, void *element);
 void array_insert_element_at(struct array_t *that, void *element, int index);
 void *array_get_element_at(array_t that, int index);
 void array_delete_element_at(struct array_t *that, int index);
@@ -106,7 +106,7 @@ array_t array_load_from_disk(char* file_name)
 	return array;
 }
 
-void array_append_element(array_t *that, void *element)
+void* array_append_element(array_t *that, void *element)
 {
 	if (that->length + 1 >= that->capacity)
     {
@@ -125,6 +125,7 @@ void array_append_element(array_t *that, void *element)
 
     memmove((char *)that->data + that->elementSize * that->length, element, that->elementSize);
     that->length++;
+	return (char *)(that->data + that->elementSize * (that->length - 1));
 }
 
 void array_insert_element_at(array_t *that, void *element, int index)
