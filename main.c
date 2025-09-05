@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -234,7 +235,7 @@ int main(void)
 	
 	if(tokenized_training_data.length == 0)
 	{
-		generate_tokens(&tokens, &token_indices, "libro.txt");
+		generate_tokens(&tokens, &token_indices, "libro_test.txt");
 	
 		dictionary = array_create(100, sizeof(char));
 		dictionary_indices = array_create(100, sizeof(int));
@@ -265,6 +266,16 @@ int main(void)
 
 		save_graph(graph);
 	}
+
+	words = array_create(3, sizeof(char*));
+
+	array_append_element(&words, "uno");
+	array_append_element(&words, "dos");
+
+	generate_phrase(words, graph, dictionary, dictionary_indices);
+	printf("\n");
+
+	return 0;
 
 	words = array_create(3, sizeof(char*));
 
@@ -519,12 +530,14 @@ void generate_dictionary(array_t *dictionary, array_t *dictionary_indices, array
 	int i, *token_i;
 	char* token_string;
 	
+	stopwatch_rdtsc_start("get_dictionary_index");
 	for(i = 0; i < token_indices.length; i++)
 	{
 		token_i = (int *)array_get_element_at(token_indices, i);
 		token_string = (char*)array_get_element_at(tokens, *token_i);
 		get_dictionary_index(dictionary, dictionary_indices,  token_string);
 	}
+	stopwatch_rdtsc_stop();
 }
 
 void print_dictionary(array_t dictionary, array_t dictionary_indices)

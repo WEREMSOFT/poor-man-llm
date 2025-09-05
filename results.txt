@@ -22,3 +22,7 @@ The old Jew laughed and replied, “Death--pah! You forget, my friend, who I am 
 But then a noise did scare me from the search of eyes . 
 
 Finally we stopped flitting and lit . 
+
+======================================
+pre binary search
+[get_dictionary_index]::Elapsed cycles: 000014802
