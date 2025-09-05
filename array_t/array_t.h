@@ -17,7 +17,7 @@ typedef struct array_t
 array_t array_create(int initialCapacity, size_t elementSize);
 void* array_append_element(struct array_t *that, void *element);
 void array_insert_element_at(struct array_t *that, void *element, int index);
-void array_insert_element_in_order(struct array_t *that, void *element, int (*compar)(const void *, const void *, void *));
+void *array_insert_element_in_order(struct array_t *that, void *element, int (*compar)(const void *, const void *, void *));
 void *array_get_element_at(array_t that, int index);
 void array_delete_element_at(struct array_t *that, int index);
 void array_concatenate(struct array_t *that, struct array_t src);
@@ -190,10 +190,11 @@ void array_concatenate(struct array_t *that, struct array_t src)
 	}
 }
 
-void array_insert_element_in_order(struct array_t *that, void *element, int (*compar)(const void *, const void *, void *))
+void* array_insert_element_in_order(struct array_t *that, void *element, int (*compar)(const void *, const void *, void *))
 {
-	array_append_element(that, element);
+	element = array_append_element(that, element);
 	qsort_r(that->data, that->length, that->element_size, compar, NULL);
+	return element;
 }
 
 void *array_search_element(struct array_t array, void *key, int (*compar)(const void *, const void *))

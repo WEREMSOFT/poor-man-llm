@@ -5,10 +5,10 @@ endif
 all: build
 	./main.bin
 
-build_vscode: clean clean_data
+build_vscode: clean
 	gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
 
-build: clean clean_data
+build: clean
 	gcc $(CFLAGS) -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
 
 build_release: clean

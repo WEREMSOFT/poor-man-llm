@@ -133,8 +133,7 @@ array_t graph_merge(array_t graph_1, array_t graph_2)
 
 		if(node_temp == NULL)
 		{
-			array_append_element(&graph_1, node_temp_2);
-			node_temp = array_get_element_at(graph_1, graph_1.length-1);
+			node_temp = array_insert_element_in_order(&graph_1, node_temp_2, compar_graph_keys_n);
 		} else {
 			for(j = 0; j < node_temp_2->children.length; j++)
 			{
@@ -268,6 +267,8 @@ int main(void)
 		save_graph(graph);
 	}
 
+	print_graph(graph, dictionary);
+
 	words = array_create(3, sizeof(char*));
 
 	array_append_element(&words, "uno");
@@ -277,6 +278,9 @@ int main(void)
 	printf("\n");
 
 	return 0;
+/*
+
+*/
 
 	words = array_create(3, sizeof(char*));
 
@@ -335,7 +339,7 @@ void print_graph(array_t graph, array_t tokens)
 			{
 				printf("-");
 			}
-			printf("%s", &((char *)tokens.data)[node->key[j]]);
+			printf("%d:%s", node->key[j], &((char *)tokens.data)[node->key[j]]);
 		}
 		printf("\n");
 		for(j = 0; j < node->children.length; j++)
