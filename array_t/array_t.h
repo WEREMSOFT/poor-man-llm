@@ -1,15 +1,15 @@
 #ifndef __ARRAY_T_H__
 #define __ARRAY_T_H__
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 typedef struct array_t
 {
     int length;
 	int capacity;
-    size_t elementSize;
+    size_t element_size;
     void* data;
 } array_t;
 
@@ -17,12 +17,14 @@ typedef struct array_t
 array_t array_create(int initialCapacity, size_t elementSize);
 void* array_append_element(struct array_t *that, void *element);
 void array_insert_element_at(struct array_t *that, void *element, int index);
+void array_insert_element_in_order(struct array_t *that, void *element, int (*compar)(const void *, const void *, void *));
 void *array_get_element_at(array_t that, int index);
 void array_delete_element_at(struct array_t *that, int index);
 void array_concatenate(struct array_t *that, struct array_t src);
 int array_save_to_disk(array_t array, char* file_name);
 array_t array_load_from_disk(char* file_name);
 array_t array_destroy(array_t array);
+void *array_search_element(struct array_t array, void *key, int (*compar)(const void *, const void *));
 
 #ifndef ARRAY_MALLOC
 #define ARRAY_MALLOC malloc
@@ -42,7 +44,7 @@ array_t array_create(int initialCapacity, size_t elementSize)
     
 	array.length = 0;
 	array.capacity = initialCapacity;
-	array.elementSize = elementSize;
+	array.element_size = elementSize;
 	
 	array.data =  ARRAY_MALLOC(size);
 
@@ -60,7 +62,7 @@ array_t array_create(int initialCapacity, size_t elementSize)
 array_t array_destroy(array_t array)
 {
 	free(array.data);
-	array.capacity = array.elementSize = array.length  = 0;
+	array.capacity = array.element_size = array.length  = 0;
 	array.data = NULL;
 	return array;
 }
@@ -76,7 +78,7 @@ int array_save_to_disk(array_t array, char* file_name)
 	}
 
 	fwrite(&array, sizeof(array_t), 1, fp);
-	fwrite(array.data, array.elementSize ,array.length, fp);
+	fwrite(array.data, array.element_size ,array.length, fp);
 	fclose(fp);
 
 	return 0;
@@ -97,9 +99,9 @@ array_t array_load_from_disk(char* file_name)
 
 	fread(&array, sizeof(array_t), 1, fp);
 
-	array.data = ARRAY_MALLOC(array.elementSize * array.capacity);
+	array.data = ARRAY_MALLOC(array.element_size * array.capacity);
 
-	fread(array.data, array.elementSize, array.capacity, fp);
+	fread(array.data, array.element_size, array.capacity, fp);
 
 	fclose(fp);
 
@@ -110,7 +112,7 @@ void* array_append_element(array_t *that, void *element)
 {
 	if (that->length + 1 >= that->capacity)
     {
-        int size = that->capacity * that->elementSize * 2;
+        int size = that->capacity * that->element_size * 2;
         void* new_pointer = ARRAY_REALLOC(that->data, size);
         if (new_pointer == NULL)
         {
@@ -120,19 +122,24 @@ void* array_append_element(array_t *that, void *element)
         		
 		that->capacity *= 2;
 		that->data = new_pointer;
-		memset((char *)that->data + that->elementSize * that->length, 0, (that->capacity - that->length - 1) * that->elementSize);
+		memset((char *)that->data + that->element_size * that->length, 0, (that->capacity - that->length - 1) * that->element_size);
     }
 
-    memmove((char *)that->data + that->elementSize * that->length, element, that->elementSize);
+    memmove((char *)that->data + that->element_size * that->length, element, that->element_size);
     that->length++;
-	return (char *)((char *)that->data + that->elementSize * (that->length - 1));
+	return (char *)((char *)that->data + that->element_size * (that->length - 1));
 }
 
 void array_insert_element_at(array_t *that, void *element, int index)
 {
+	if(index > that->length)
+	{
+		printf("index out of bounds\n");
+		exit(-1);
+	}
     if (that->length + 1 >= that->capacity)
     {
-        int size = that->capacity * that->elementSize * 2;
+        int size = that->capacity * that->element_size * 2;
         void *new_pointer = ARRAY_REALLOC(that->data, size);
         if (new_pointer == NULL)
         {
@@ -142,25 +149,24 @@ void array_insert_element_at(array_t *that, void *element, int index)
 				
 		that->capacity *= 2;
 		that->data = new_pointer;
-		memset((char *)that->data + that->elementSize * that->length, 0, (that->capacity - that->length - 1) * that->elementSize);
-
+		memset((char *)that->data + that->element_size * that->length, 0, (that->capacity - that->length - 1) * that->element_size);
     }
 
 	that->length++;
 
-    memmove((char *)that->data + that->elementSize * (index + 1), 
-			(char *)that->data + that->elementSize * index,
-			that->elementSize * (that->length - index));
+    memmove((char *)that->data + that->element_size * (index + 1), 
+			(char *)that->data + that->element_size * index,
+			that->element_size * (that->length - index));
 
-    memmove((char *)that->data + that->elementSize * index, 
-			element, that->elementSize);
+    memmove((char *)that->data + that->element_size * index, 
+			element, that->element_size);
 }
 
 void *array_get_element_at(array_t that, int index)
 {
     if (index < that.length)
     {
-        return (void *)((char *)that.data  + index * that.elementSize);
+        return (void *)((char *)that.data  + index * that.element_size);
     }
     return NULL;
 }
@@ -170,7 +176,7 @@ void array_delete_element_at(struct array_t* that, int index)
 	int i;
 	for(i = index; i < that->length; i++)
 	{
-		memmove((char *)that->data + i * that->elementSize, (char *)that->data + (i + 1) * that->elementSize, that->elementSize);
+		memmove((char *)that->data + i * that->element_size, (char *)that->data + (i + 1) * that->element_size, that->element_size);
 	}
 	that->length--;
 }
@@ -184,5 +190,15 @@ void array_concatenate(struct array_t *that, struct array_t src)
 	}
 }
 
+void array_insert_element_in_order(struct array_t *that, void *element, int (*compar)(const void *, const void *, void *))
+{
+	array_append_element(that, element);
+	qsort_r(that->data, that->length, that->element_size, compar, NULL);
+}
+
+void *array_search_element(struct array_t array, void *key, int (*compar)(const void *, const void *))
+{
+	return bsearch(key, array.data, array.length, array.element_size, compar);
+}
 #endif
 #endif
