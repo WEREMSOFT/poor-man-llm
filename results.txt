@@ -25,4 +25,6 @@ Finally we stopped flitting and lit .
 
 ======================================
 pre binary search
-[get_dictionary_index]::Elapsed cycles: 000014802
+single thread
+[building graph]::Elapsed cycles: 000045082
+[building graph]::Elapsed time: 0.000019 secs.

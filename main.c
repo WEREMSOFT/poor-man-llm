@@ -19,12 +19,13 @@ void generate_tokens(array_t* tokens, array_t* token_indices, char* training_dat
 void generate_dictionary(array_t *dictionary, array_t *dictionary_indices, array_t tokens, array_t token_indices);
 void generate_training_data(array_t *training_data, array_t dictionary, array_t dictionary_indices, array_t tokens, array_t token_indices);
 void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t dictionary_indices);
-void build_graph(array_t *graph, array_t tokenized_training_data);
 array_t build_graph_threaded(array_t tokenized_training_data, array_t tokens);
 void save_graph(array_t graph);
 array_t load_graph();
 void print_graph(array_t graph, array_t tokens);
 void print_word(array_t tokens, int index);
+int compar_graph_keys(const void *a, const void *b);
+int compar_graph_keys_n(const void *a, const void *b, void* _);
 
 #define PTHREAD_NUM 16
 
@@ -87,7 +88,7 @@ void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int sta
 		{
 			actual_node = *actual_node_p;
 		} else {
-			array_append_element(graph, &actual_node);
+			array_insert_element_in_order(graph, &actual_node, compar_graph_keys_n);
 		}
 
 		parent_node_p = get_node_by_key(*graph, parent_key);
@@ -127,9 +128,6 @@ array_t graph_merge(array_t graph_1, array_t graph_2)
 
 	for(i = 0; i <  graph_2.length; i++)
 	{
-		/*
-		printf("merge progress: %.2f%%\n", ((float)i / (float)graph_2.length) * 100.0);
-		*/
 		node_temp_2 = array_get_element_at(graph_2, i);
 		node_temp = get_node_by_key(graph_1, node_temp_2->key);
 
@@ -255,6 +253,8 @@ int main(void)
 
 	if(graph.length == 0)
 	{
+		stopwatch_start("building graph");
+		stopwatch_rdtsc_start("building graph");
 		#ifdef MULTI 
 			printf("multi thread\n");
 			graph = build_graph_threaded(tokenized_training_data, dictionary);
@@ -263,7 +263,8 @@ int main(void)
 			graph = array_create(10, sizeof(node_t));
 			build_graph_slice2(&graph, tokenized_training_data, 0, tokenized_training_data.length);
 		#endif
-
+		stopwatch_rdtsc_stop();
+		stopwatch_stop();
 		save_graph(graph);
 	}
 
@@ -530,14 +531,12 @@ void generate_dictionary(array_t *dictionary, array_t *dictionary_indices, array
 	int i, *token_i;
 	char* token_string;
 	
-	stopwatch_rdtsc_start("get_dictionary_index");
 	for(i = 0; i < token_indices.length; i++)
 	{
 		token_i = (int *)array_get_element_at(token_indices, i);
 		token_string = (char*)array_get_element_at(tokens, *token_i);
 		get_dictionary_index(dictionary, dictionary_indices,  token_string);
 	}
-	stopwatch_rdtsc_stop();
 }
 
 void print_dictionary(array_t dictionary, array_t dictionary_indices)
@@ -579,24 +578,32 @@ void print_tokenized_data(array_t tokenized_data, array_t dictionary)
 	printf("\n");
 }
 
-node_t* get_node_by_key(array_t graph, int key[NODE_NUM_PARAM])
+int compar_graph_keys_n(const void *a, const void *b, void* _)
 {
-	int i, j;
-	bool found = false;
-	node_t *node;
+	(void)_;
+	return compar_graph_keys(a, b);
+}
 
-	for(i = 0; i < graph.length && !found; i++)
+int compar_graph_keys(const void *a, const void *b)
+{
+	int j, result;
+	node_t *node_a, *node_b;
+	node_a = (node_t*)a;
+	node_b = (node_t*)b;
+
+	for(j = 0; j < NODE_NUM_PARAM; j++)
 	{
-		node = (node_t*)array_get_element_at(graph, i);
-
-		found = true;
-		for(j = 0; j < NODE_NUM_PARAM; j++)
-		{
-			found &= node->key[j] == key[j];
-		}
+		result = node_a->key[j] - node_b->key[j];
+		if(result != 0)
+			return result;
 	}
 
-	return found ? node : NULL;
+	return result;
+}
+
+node_t* get_node_by_key(array_t graph, int key[NODE_NUM_PARAM])
+{
+	return array_search_element(graph, key, compar_graph_keys);
 }
 
 array_t get_nodes_by_key(array_t graph, int key[NODE_NUM_PARAM])
@@ -624,41 +631,6 @@ array_t get_nodes_by_key(array_t graph, int key[NODE_NUM_PARAM])
 	}
 
 	return nodes;
-}
-
-void build_graph(array_t *graph, array_t tokenized_training_data)
-{
-	int i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
-	node_t actual_node = {0}, *parent_node, *actual_node_p;
-
-	for(i = NODE_NUM_PARAM; i < tokenized_training_data.length - 1; i++)
-	{
-		actual_node = node_create();
-
-		for(j = 0; j < NODE_NUM_PARAM; j++)
-		{
-			training_token = array_get_element_at(tokenized_training_data, i - NODE_NUM_PARAM + j);
-			parent_key[j] = *training_token;
-			training_token = array_get_element_at(tokenized_training_data, i + 1 - NODE_NUM_PARAM + j);
-			actual_key[j] = *training_token;
-			actual_node.key[j] = *training_token;
-		}
-
-		actual_node_p = get_node_by_key(*graph, actual_key);
-
-		if(actual_node_p != NULL)
-		{
-			actual_node = *actual_node_p;
-		} else {
-			array_append_element(graph, &actual_node);
-		}
-
-		parent_node = get_node_by_key(*graph, parent_key);
-		if(parent_node != NULL)
-		{
-			array_append_element(&parent_node->children, &actual_node.key);
-		}	
-	}
 }
 
 array_t load_graph()
@@ -791,9 +763,6 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 		random_index = rand() % actual_node->children.length;
 		index = array_get_element_at(actual_node->children, random_index);
 		actual_node = get_node_by_key(graph, index);
-		 /*
-		 actual_node = array_get_element_at(graph, *index);
-		 */
 		word = &((char *)dictionary.data)[actual_node->key[NODE_NUM_PARAM - 1]];
 		if(strcmp(word, ".") == 0)
 		{
