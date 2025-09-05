@@ -387,7 +387,15 @@ void generate_tokens(array_t* tokens, array_t* token_indices, char* training_dat
 		
 		for(i = 0; i < sb.st_size; i++)
 		{
-			if(file_content[i] != 32 && file_content[i] != '\n' && file_content[i] != '\r' && file_content[i] != '.')
+			if(file_content[i] != 32 
+				&& file_content[i] != '\n' 
+				&& file_content[i] != '\r' 
+				&& file_content[i] != '.' 
+				&& file_content[i] != '?' 
+				&& file_content[i] != ',' 
+				&& file_content[i] != ';'
+				&& file_content[i] != '"'
+				&& file_content[i] != ':')
 			{
 				if(first_char)
 				{
