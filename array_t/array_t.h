@@ -16,7 +16,7 @@ typedef struct array_t
 
 array_t array_create(int initialCapacity, size_t elementSize);
 void* array_append_element(struct array_t *that, void *element);
-void array_insert_element_at(struct array_t *that, void *element, int index);
+void* array_insert_element_at(array_t *that, void *element, int index);
 void *array_insert_element_in_order(struct array_t *that, void *element, int (*compar)(const void *, const void *, void *));
 void *array_get_element_at(array_t that, int index);
 void array_delete_element_at(struct array_t *that, int index);
@@ -130,7 +130,7 @@ void* array_append_element(array_t *that, void *element)
 	return (char *)((char *)that->data + that->element_size * (that->length - 1));
 }
 
-void array_insert_element_at(array_t *that, void *element, int index)
+void* array_insert_element_at(array_t *that, void *element, int index)
 {
 	if(index > that->length)
 	{
@@ -160,6 +160,8 @@ void array_insert_element_at(array_t *that, void *element, int index)
 
     memmove((char *)that->data + that->element_size * index, 
 			element, that->element_size);
+
+	return (char *)that->data + that->element_size * index;
 }
 
 void *array_get_element_at(array_t that, int index)
@@ -192,8 +194,24 @@ void array_concatenate(struct array_t *that, struct array_t src)
 
 void* array_insert_element_in_order(struct array_t *that, void *element, int (*compar)(const void *, const void *, void *))
 {
+	int i, result;
+	void *temp_element;
+	/*
 	element = array_append_element(that, element);
+	*/ 
+	for(i = 0; i < that->length; i++)
+	{
+		temp_element = array_get_element_at(*that, i);
+		result = compar(temp_element, element, NULL);
+		if(result >= 0)
+		{
+			return array_insert_element_at(that, element, i);
+		}
+	}
+	/*
 	qsort_r(that->data, that->length, that->element_size, compar, NULL);
+	*/
+	element = array_append_element(that, element);
 	return element;
 }
 

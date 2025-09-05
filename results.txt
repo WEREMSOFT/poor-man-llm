@@ -28,3 +28,30 @@ pre binary search
 single thread
 [building graph]::Elapsed cycles: 000045082
 [building graph]::Elapsed time: 0.000019 secs.
+post binary search
+single thread
+[building graph]::Elapsed cycles: 000142064
+[building graph]::Elapsed time: 0.000054 secs.
+
+single thread - custom insert in order
+[building graph]::Elapsed cycles: 000048784
+[building graph]::Elapsed time: 0.000024 secs.
+################
+
+[building graph]::Elapsed cycles: 5842733397328
+[building graph]::Elapsed time: 1038.527064 secs.
+The old man's voice droned on . 
+
+But then the theory of the natural philosophers, that all other earthly hues—every stately or lovely emblazoning—the sweet tinges of sunset skies and woods; yea, and the gilded velvets of butterflies, and the butterfly cheeks of young girls; all these are but subtile deceits, not actually inherent in substances, but only laid on from without; so that all should hear, and said: “What are you jabbering about, shipmate?” said I . 
+
+Finally we stopped flitting and lit . 
+[LLM Training]::WC-End
+Wall clock elapsed time in secconds 737
+
+The old trapper or squatter and his three mates stood at his side . 
+
+But then a noise did scare me from the Friar? How doth my lady? Is my father well? How fares my Juliet? That I ask again; For nothing can be ill if she be well . 
+
+Finally the cabin door closed upon them than from three of the gaps between them are from thirty to forty miles in width . 
+[LLM Training]::WC-End
+Wall clock elapsed time in secconds 710

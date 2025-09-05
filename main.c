@@ -27,7 +27,7 @@ void print_word(array_t tokens, int index);
 int compar_graph_keys(const void *a, const void *b);
 int compar_graph_keys_n(const void *a, const void *b, void* _);
 
-#define PTHREAD_NUM 16
+#define PTHREAD_NUM 32
 
 typedef struct thread_params_t
 {
@@ -232,7 +232,7 @@ int main(void)
 	
 	if(tokenized_training_data.length == 0)
 	{
-		generate_tokens(&tokens, &token_indices, "libro_test.txt");
+		generate_tokens(&tokens, &token_indices, "libro.txt");
 	
 		dictionary = array_create(100, sizeof(char));
 		dictionary_indices = array_create(100, sizeof(int));
@@ -266,8 +266,7 @@ int main(void)
 		stopwatch_stop();
 		save_graph(graph);
 	}
-
-	print_graph(graph, dictionary);
+	/*
 
 	words = array_create(3, sizeof(char*));
 
@@ -278,7 +277,6 @@ int main(void)
 	printf("\n");
 
 	return 0;
-/*
 
 */
 
