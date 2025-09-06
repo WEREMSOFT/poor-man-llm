@@ -55,3 +55,6 @@ But then a noise did scare me from the Friar? How doth my lady? Is my father wel
 Finally the cabin door closed upon them than from three of the gaps between them are from thirty to forty miles in width . 
 [LLM Training]::WC-End
 Wall clock elapsed time in secconds 710
+===============================
+new book set
+Wall clock elapsed time in secconds 20724 (5 hours)
