@@ -26,6 +26,8 @@ void print_graph(array_t graph, array_t tokens);
 void print_word(array_t tokens, int index);
 int compar_graph_keys(const void *a, const void *b);
 int compar_graph_keys_n(const void *a, const void *b, void* _);
+void str_tolower(char *s);
+
 
 #define PTHREAD_NUM 32
 
@@ -45,11 +47,102 @@ typedef struct merge_thread_params_t
 	array_t result;
 } merge_thread_params_t;
 
-/*
-DEBUG
-*/
-
 array_t dic;
+
+int main(int argc, char** argv)
+{
+	array_t graph = {0};
+	array_t tokens = {0};	
+	array_t token_indices = {0};
+
+	array_t dictionary = {0};
+	array_t dictionary_indices = {0};
+
+	array_t tokenized_training_data = {0};
+
+	array_t words = {0};
+
+	stopwatch_wall_clock_start("LLM Training");
+
+	dictionary = array_load_from_disk("model_data/dictionary.arr");
+	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
+	dictionary_indices = array_load_from_disk("model_data/dictionary_indices.arr");
+	
+	if(tokenized_training_data.length == 0)
+	{
+		generate_tokens(&tokens, &token_indices, "libro_test.txt");
+	
+		dictionary = array_create(100, sizeof(char));
+		dictionary_indices = array_create(100, sizeof(int));
+	
+		generate_dictionary(&dictionary, &dictionary_indices, tokens, token_indices);
+	
+		tokenized_training_data = array_create(100, sizeof(int));
+		generate_training_data(&tokenized_training_data, dictionary, dictionary_indices, tokens, token_indices);
+		array_save_to_disk(dictionary, "model_data/dictionary.arr");
+		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
+		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
+	}
+	
+	dic = dictionary;
+
+	graph = load_graph();
+
+	if(graph.length == 0)
+	{
+		stopwatch_start("building graph");
+		stopwatch_rdtsc_start("building graph");
+		#ifdef MULTI 
+			printf("multi thread\n");
+			graph = build_graph_threaded(tokenized_training_data, dictionary);
+		#else
+			printf("single thread\n");
+			graph = array_create(10, sizeof(node_t));
+			build_graph_slice2(&graph, tokenized_training_data, 0, tokenized_training_data.length);
+		#endif
+		stopwatch_rdtsc_stop();
+		stopwatch_stop();
+		save_graph(graph);
+	}
+
+	static char buffer[1024*1024]; /* 1 MB */
+    char tmp[1024*1024];
+    char *token;
+    const char *delim = " \t\r\n";
+
+	for (;;) {
+        printf("Enter a phrase (type 'Bye' to quit): ");
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+            break; /* EOF o error */
+        }
+
+        buffer[strcspn(buffer, "\n")] = '\0';
+
+        /* check case-insensitive exit */
+        strcpy(tmp, buffer);
+        str_tolower(tmp);
+        if (strcmp(tmp, "bye") == 0) {
+            break;
+        }
+
+        words = array_create(8, sizeof(char*));
+
+        token = strtok(buffer, delim);
+        while (token != NULL) {
+            array_append_element(&words, token);
+            token = strtok(NULL, delim);
+        }
+
+        generate_phrase(words, graph, dictionary, dictionary_indices);
+
+        array_destroy(words);
+    }
+
+
+	stopwatch_wall_clock_stop();
+
+	return 0;
+}
 
 void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int start, int end)
 {
@@ -215,101 +308,6 @@ void str_tolower(char *s)
         *s = (char)tolower((unsigned char)*s);
         s++;
     }
-}
-
-int main(int argc, char** argv)
-{
-	array_t graph = {0};
-	array_t tokens = {0};	
-	array_t token_indices = {0};
-
-	array_t dictionary = {0};
-	array_t dictionary_indices = {0};
-
-	array_t tokenized_training_data = {0};
-
-	array_t words = {0};
-
-	stopwatch_wall_clock_start("LLM Training");
-
-	dictionary = array_load_from_disk("model_data/dictionary.arr");
-	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
-	dictionary_indices = array_load_from_disk("model_data/dictionary_indices.arr");
-	
-	if(tokenized_training_data.length == 0)
-	{
-		generate_tokens(&tokens, &token_indices, "libro_test.txt");
-	
-		dictionary = array_create(100, sizeof(char));
-		dictionary_indices = array_create(100, sizeof(int));
-	
-		generate_dictionary(&dictionary, &dictionary_indices, tokens, token_indices);
-	
-		tokenized_training_data = array_create(100, sizeof(int));
-		generate_training_data(&tokenized_training_data, dictionary, dictionary_indices, tokens, token_indices);
-		array_save_to_disk(dictionary, "model_data/dictionary.arr");
-		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
-		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
-	}
-	
-	dic = dictionary;
-
-	graph = load_graph();
-
-	if(graph.length == 0)
-	{
-		stopwatch_start("building graph");
-		stopwatch_rdtsc_start("building graph");
-		#ifdef MULTI 
-			printf("multi thread\n");
-			graph = build_graph_threaded(tokenized_training_data, dictionary);
-		#else
-			printf("single thread\n");
-			graph = array_create(10, sizeof(node_t));
-			build_graph_slice2(&graph, tokenized_training_data, 0, tokenized_training_data.length);
-		#endif
-		stopwatch_rdtsc_stop();
-		stopwatch_stop();
-		save_graph(graph);
-	}
-
-	static char buffer[1024*1024]; /* 1 MB */
-    char tmp[1024*1024];
-    char *token;
-    const char *delim = " \t\r\n";
-
-	for (;;) {
-        printf("Enter a phrase (type 'Bye' to quit): ");
-        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
-            break; /* EOF o error */
-        }
-
-        buffer[strcspn(buffer, "\n")] = '\0';
-
-        /* check case-insensitive exit */
-        strcpy(tmp, buffer);
-        str_tolower(tmp);
-        if (strcmp(tmp, "bye") == 0) {
-            break;
-        }
-
-        words = array_create(8, sizeof(char*));
-
-        token = strtok(buffer, delim);
-        while (token != NULL) {
-            array_append_element(&words, token);
-            token = strtok(NULL, delim);
-        }
-
-        generate_phrase(words, graph, dictionary, dictionary_indices);
-
-        array_destroy(words);
-    }
-
-
-	stopwatch_wall_clock_stop();
-
-	return 0;
 }
 
 void print_word(array_t tokens, int index)

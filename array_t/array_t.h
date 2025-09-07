@@ -97,12 +97,11 @@ array_t array_load_from_disk(char* file_name)
 		return array;
 	}
 
-
-	fread(&array, sizeof(array_t), 1, fp);
+	result = fread(&array, sizeof(array_t), 1, fp);
 	
 	array.data = ARRAY_MALLOC(array.element_size * array.capacity);
 
-	fread(array.data, array.element_size, array.capacity, fp);
+	result = fread(array.data, array.element_size, array.capacity, fp);
 
 	fclose(fp);
 
