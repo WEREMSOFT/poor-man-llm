@@ -5,15 +5,18 @@ endif
 all: build
 	./main.bin
 
-run_multi: clean clean_data
+run_multi: clean
 	gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
 	./main.bin
 
-build_vscode: clean clean_data
+build_vscode: clean
 	gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
 
 build: clean
 	gcc $(CFLAGS) -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+
+build_multi: clean
+	gcc -DMULTI -O0 -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
 
 build_release: clean
 	gcc -DMULTI -O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG -std=c89 -lpthread main.c -o main.bin

@@ -1,5 +1,0 @@
-uno dos tres cuatro cinco seis siete.
-uno dos tres 50 60 70.
-uno dos tres cuatro cinco seis siete.
-uno dos tres 80 90 100.
-uno dos tres 110 120 130.

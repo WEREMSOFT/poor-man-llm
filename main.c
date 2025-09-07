@@ -163,7 +163,6 @@ array_t build_graph_threaded(array_t tokenized_training_data, array_t dictionary
 	int reminder = tokenized_training_data.length % PTHREAD_NUM;
 	array_t graph = {0};
 	int start = 0;
-	printf("WWWWWWWWWWWWWWWWWWWWWW\n");
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
 		thread_params[i].start = start;
@@ -175,7 +174,6 @@ array_t build_graph_threaded(array_t tokenized_training_data, array_t dictionary
 		pthread_create(&threads[i], NULL, build_graph_slice, &thread_params[i]);
 		
 	}
-	printf("WWWWWWWWWWWWWWWWWWWWWW\n");
 	
 	for(i = 0; i < PTHREAD_NUM; i++)
 	{
@@ -211,7 +209,7 @@ array_t build_graph_threaded(array_t tokenized_training_data, array_t dictionary
 	return graph;
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
 	array_t graph = {0};
 	array_t tokens = {0};	
@@ -280,10 +278,21 @@ int main(void)
 
 */
 
+	int i;
 	words = array_create(3, sizeof(char*));
 
-	array_append_element(&words, "The");
-	array_append_element(&words, "old");
+	for(i = 1; i < argc; i++)
+	{
+		array_append_element(&words, argv[i]);
+	}
+	generate_phrase(words, graph, dictionary, dictionary_indices);
+	return 0;
+
+	words = array_create(3, sizeof(char*));
+
+	array_append_element(&words, "open");
+	array_append_element(&words, "a");
+	array_append_element(&words, "door");
 	
 	generate_phrase(words, graph, dictionary, dictionary_indices);
 
