@@ -58,3 +58,12 @@ Wall clock elapsed time in secconds 710
 ===============================
 new book set
 Wall clock elapsed time in secconds 20724 (5 hours)
+
+
+==================
+[building graph]::Elapsed cycles: 03910426835
+[building graph]::Elapsed time: 1.458615 secs.
+
+
+[building graph]::Elapsed cycles: 23158762402
+[building graph]::Elapsed time: 4.894449 secs.

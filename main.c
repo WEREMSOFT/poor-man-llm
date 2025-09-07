@@ -209,6 +209,14 @@ array_t build_graph_threaded(array_t tokenized_training_data, array_t dictionary
 	return graph;
 }
 
+void str_tolower(char *s)
+{
+    while (*s) {
+        *s = (char)tolower((unsigned char)*s);
+        s++;
+    }
+}
+
 int main(int argc, char** argv)
 {
 	array_t graph = {0};
@@ -230,7 +238,7 @@ int main(int argc, char** argv)
 	
 	if(tokenized_training_data.length == 0)
 	{
-		generate_tokens(&tokens, &token_indices, "libro.txt");
+		generate_tokens(&tokens, &token_indices, "libro_test.txt");
 	
 		dictionary = array_create(100, sizeof(char));
 		dictionary_indices = array_create(100, sizeof(int));
@@ -264,55 +272,40 @@ int main(int argc, char** argv)
 		stopwatch_stop();
 		save_graph(graph);
 	}
-	/*
 
-	words = array_create(3, sizeof(char*));
+	static char buffer[1024*1024]; /* 1 MB */
+    char tmp[1024*1024];
+    char *token;
+    const char *delim = " \t\r\n";
 
-	array_append_element(&words, "uno");
-	array_append_element(&words, "dos");
+	for (;;) {
+        printf("Enter a phrase (type 'Bye' to quit): ");
+        if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+            break; /* EOF o error */
+        }
 
-	generate_phrase(words, graph, dictionary, dictionary_indices);
-	printf("\n");
+        buffer[strcspn(buffer, "\n")] = '\0';
 
-	return 0;
+        /* check case-insensitive exit */
+        strcpy(tmp, buffer);
+        str_tolower(tmp);
+        if (strcmp(tmp, "bye") == 0) {
+            break;
+        }
 
-*/
+        words = array_create(8, sizeof(char*));
 
-	int i;
-	words = array_create(3, sizeof(char*));
+        token = strtok(buffer, delim);
+        while (token != NULL) {
+            array_append_element(&words, token);
+            token = strtok(NULL, delim);
+        }
 
-	for(i = 1; i < argc; i++)
-	{
-		array_append_element(&words, argv[i]);
-	}
-	generate_phrase(words, graph, dictionary, dictionary_indices);
-	return 0;
+        generate_phrase(words, graph, dictionary, dictionary_indices);
 
-	words = array_create(3, sizeof(char*));
+        array_destroy(words);
+    }
 
-	array_append_element(&words, "open");
-	array_append_element(&words, "a");
-	array_append_element(&words, "door");
-	
-	generate_phrase(words, graph, dictionary, dictionary_indices);
-
-	printf("\n");
-
-	words = array_destroy(words);
-	words = array_create(3, sizeof(char*));
-
-	array_append_element(&words, "But");
-	array_append_element(&words, "then");
-
-	generate_phrase(words, graph, dictionary, dictionary_indices);
-
-	printf("\n");
-
-	words = array_destroy(words);
-	words = array_create(3, sizeof(char*));
-
-	array_append_element(&words, "Finally");
-	generate_phrase(words, graph, dictionary, dictionary_indices);
 
 	stopwatch_wall_clock_stop();
 
@@ -603,20 +596,31 @@ int compar_graph_keys_n(const void *a, const void *b, void* _)
 	return compar_graph_keys(a, b);
 }
 
+
+int compar_graph_keys_new(const void *a, const void *b)
+{
+    const node_t *node_a = a;
+    const node_t *node_b = b;
+    int cmp = memcmp(node_a->key, node_b->key, NODE_NUM_PARAM * sizeof(int));
+    if (cmp < 0) return -1;
+    if (cmp > 0) return 1;
+    return 0;
+}
+
 int compar_graph_keys(const void *a, const void *b)
 {
 	int j, result;
 	node_t *node_a, *node_b;
 	node_a = (node_t*)a;
 	node_b = (node_t*)b;
-
+	
 	for(j = 0; j < NODE_NUM_PARAM; j++)
 	{
 		result = node_a->key[j] - node_b->key[j];
 		if(result != 0)
-			return result;
+		return result;
 	}
-
+	
 	return result;
 }
 
@@ -661,10 +665,13 @@ array_t load_graph()
 
 	graph = array_load_from_disk("model_data/graph.arr");
 
+	printf("Loading corpus...\n");
+
 	if(graph.length != 0)
 	{
 		for( i = 0; i < graph.length; i++)
 		{
+			printf("%.2f%%\r", ((float)i / (float)graph.length) * 100.);
 			node_temp = array_get_element_at(graph, i);
 			sprintf(file_name, "model_data/token_graph_%d.arr", i);
 			node_temp->children = array_load_from_disk(file_name);
@@ -744,7 +751,7 @@ void print_nodes_by_indexes(array_t graph, array_t tokens, array_t indices)
 
 void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t dictionary_indices)
 {
-	int i, keys[NODE_NUM_PARAM] = {0}, random_index, *index;
+	int i, ii, keys[NODE_NUM_PARAM] = {0}, random_index, *index;
 	array_t posible_initial_nodes = {0};
 	node_t *actual_node;
 	bool should_continue = true;
@@ -757,12 +764,20 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 		keys[i] = -1;
 	}
 
-	for(i = 0; i < NODE_NUM_PARAM && i < words.length; i++)
+	ii = 0;
+	for(i = words.length < NODE_NUM_PARAM ? 0 : (words.length - NODE_NUM_PARAM); i < words.length; i++)
 	{
-		keys[i] = get_dictionary_index(&dictionary, &dictionary_indices, array_get_element_at(words, i));
+		keys[ii] = get_dictionary_index(&dictionary, &dictionary_indices, array_get_element_at(words, i));
+		ii++;
 	}
 	
 	posible_initial_nodes = get_nodes_by_key(graph, keys);
+
+	if(posible_initial_nodes.length == 0)
+	{
+		printf("I don't understand. Try a different initial phrase.\n");
+		return;
+	}
 
 	random_index = rand() % posible_initial_nodes.length;
 

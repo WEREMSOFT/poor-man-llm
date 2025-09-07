@@ -21,6 +21,9 @@ build_multi: clean
 build_release: clean
 	gcc -DMULTI -O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG -std=c89 -lpthread main.c -o main.bin
 
+run_release: clean clean_data build_release
+	./main.bin the man
+
 clean:
 	rm -f *.o
 	rm -f *.bin
