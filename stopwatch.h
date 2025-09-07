@@ -1,0 +1,104 @@
+#ifndef __STOPWATCH_H__
+#define __STOPWATCH_H__
+
+#include <time.h>
+#include <unistd.h>
+#include <stdio.h>
+
+typedef struct {
+    unsigned long lo;
+    unsigned long hi;
+} tsc_t;
+
+clock_t time_start;
+time_t wall_clock_start;
+char *stopwatch_label;
+char *wall_clock_label;
+
+tsc_t tsc_start;
+char *stopwatch_label = "";
+
+void stopwatch_start(char *label)
+{
+	stopwatch_label = label;
+	printf("[%s]::Start\n", label);
+	time_start = clock();
+}
+
+void stopwatch_stop()
+{
+	double elapsed_time_in_secs = 0;
+	clock_t time_end;
+
+	time_end = clock();
+
+	elapsed_time_in_secs = (double)(time_end - time_start) / CLOCKS_PER_SEC;
+	printf("[%s]::Elapsed time: %f secs.\n", stopwatch_label, elapsed_time_in_secs);
+}
+
+void stopwatch_reset(char *label)
+{
+	stopwatch_stop();
+	stopwatch_start(label);
+}
+
+void stopwatch_wall_clock_start(char* label)
+{
+	wall_clock_label = label;
+	printf("[%s]::WC-Start\n", wall_clock_label);
+	time(&wall_clock_start);
+}
+
+void stopwatch_wall_clock_stop()
+{
+	time_t wall_clock_end;
+	double elapsed;
+
+	time(&wall_clock_end);
+	elapsed = difftime(wall_clock_end, wall_clock_start);
+	printf("[%s]::WC-End\n", wall_clock_label);
+	printf("Wall clock elapsed time in secconds %.00f\n", elapsed);
+}
+
+/* Lee el contador de CPU */
+tsc_t rdtsc(void) {
+    tsc_t t;
+    __asm__ __volatile__ ("rdtsc" : "=a"(t.lo), "=d"(t.hi));
+    return t;
+}
+
+/* Calcula la diferencia en ciclos considerando acarreo */
+void tsc_diff(tsc_t start, tsc_t end, unsigned long *high, unsigned long *low) {
+    if (end.lo < start.lo) {
+        /* hubo acarreo en la parte baja */
+        *low = (0xFFFFFFFFUL - start.lo) + end.lo + 1;
+        *high = end.hi - start.hi - 1;
+    } else {
+        *low = end.lo - start.lo;
+        *high = end.hi - start.hi;
+    }
+}
+
+/* Funciones estilo stopwatch */
+void stopwatch_rdtsc_start(char *label) {
+    stopwatch_label = label;
+    printf("[%s]::Start\n", label);
+    tsc_start = rdtsc();
+}
+
+void stopwatch_rdtsc_stop(void) {
+    tsc_t tsc_end;
+    unsigned long hi, lo;
+
+    tsc_end = rdtsc();
+    tsc_diff(tsc_start, tsc_end, &hi, &lo);
+
+    printf("[%s]::Elapsed cycles: %lu%08lu\n", stopwatch_label, hi, lo);
+}
+
+void stopwatch_rdtsc_reset(char *label) {
+    stopwatch_stop();
+    stopwatch_start(label);
+}
+
+#endif

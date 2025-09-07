@@ -1,0 +1,8 @@
+rm -f *.o
+rm -f *.bin
+rm -f *.out
+rm -rf model_data
+mkdir model_data
+touch model_data/.gitkeep
+gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+./main.bin

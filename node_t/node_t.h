@@ -3,9 +3,11 @@
 
 #include "../array_t/array_t.h"
 
+#define NODE_NUM_PARAM 3
+
 typedef struct node_t
 {
-	long token;
+	int key[NODE_NUM_PARAM];
 	array_t children;
 } node_t;
 
@@ -13,9 +15,8 @@ node_t node_create()
 {
 	node_t node = {0};
 
-	node.token = -1;
-	node.children = array_create(5, sizeof(long));
-
+	node.key[0] = -1;
+	node.children = array_create(5, sizeof(long[NODE_NUM_PARAM]));
 	return node;
 }
 
