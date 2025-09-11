@@ -86,7 +86,6 @@ int array_save_to_disk(array_t array, char* file_name)
 
 array_t array_load_from_disk(char* file_name)
 {
-	int result;
 	array_t array = {0};
 	
 	FILE *fp = fopen(file_name, "r");
@@ -97,11 +96,11 @@ array_t array_load_from_disk(char* file_name)
 		return array;
 	}
 
-	result = fread(&array, sizeof(array_t), 1, fp);
+	(void)fread(&array, sizeof(array_t), 1, fp);
 	
 	array.data = ARRAY_MALLOC(array.element_size * array.capacity);
 
-	result = fread(array.data, array.element_size, array.capacity, fp);
+	(void) fread(array.data, array.element_size, array.capacity, fp);
 
 	fclose(fp);
 

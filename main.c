@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <pthread.h>
+#include <ctype.h>
 
 #define __ARRAY_T_IMPLEMENTATION__
 #include "array_t/array_t.h"
@@ -49,7 +50,7 @@ typedef struct merge_thread_params_t
 
 array_t dic;
 
-int main(int argc, char** argv)
+int main(void)
 {
 	array_t graph = {0};
 	array_t tokens = {0};	
@@ -61,6 +62,11 @@ int main(int argc, char** argv)
 	array_t tokenized_training_data = {0};
 
 	array_t words = {0};
+
+	char buffer[1024*1024]; /* 1 MB */
+    char tmp[1024*1024];
+    char *token;
+    const char *delim = " \t\r\n";
 
 	stopwatch_wall_clock_start("LLM Training");
 
@@ -104,11 +110,6 @@ int main(int argc, char** argv)
 		stopwatch_stop();
 		save_graph(graph);
 	}
-
-	static char buffer[1024*1024]; /* 1 MB */
-    char tmp[1024*1024];
-    char *token;
-    const char *delim = " \t\r\n";
 
 	for (;;) {
         printf("Enter a phrase (type 'Bye' to quit): ");

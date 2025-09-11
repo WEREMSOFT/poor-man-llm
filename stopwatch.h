@@ -62,8 +62,10 @@ void stopwatch_wall_clock_stop()
 
 /* Lee el contador de CPU */
 tsc_t rdtsc(void) {
-    tsc_t t;
+    tsc_t t = {0};
+#ifdef __INTEL__
     __asm__ __volatile__ ("rdtsc" : "=a"(t.lo), "=d"(t.hi));
+#endif
     return t;
 }
 
