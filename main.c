@@ -128,7 +128,7 @@ int main(void)
 
         words = array_create(8, sizeof(char*));
 
-        token = strtok(buffer, delim);
+        token = strtok(tmp, delim);
         while (token != NULL) {
             array_append_element(&words, token);
             token = strtok(NULL, delim);
@@ -352,6 +352,7 @@ void print_graph(array_t graph, array_t tokens)
 void generate_tokens(array_t* tokens, array_t* token_indices, char* training_data_filename)
 {
 		char *file_content;
+		char lower_case_token;
 		int fd;
 		int i, temp_index;
 		struct stat sb;
@@ -406,15 +407,16 @@ void generate_tokens(array_t* tokens, array_t* token_indices, char* training_dat
 					array_append_element(token_indices, &temp_index);
 					first_char = false;
 				}
-					
-				array_append_element(tokens, &file_content[i]);
+				lower_case_token = tolower(file_content[i]);	
+				array_append_element(tokens, &lower_case_token);
 			} else {
 				first_char = true;
 
 				if(file_content[i] == '.')
 				{
 					array_append_element(tokens, &null_char);
-					array_append_element(tokens, &file_content[i]);
+					lower_case_token = tolower(file_content[i]);
+					array_append_element(tokens, &lower_case_token);
 					temp_index = tokens->length - 1;
 					array_append_element(token_indices, &temp_index);
 				}
