@@ -30,7 +30,7 @@ int compar_graph_keys_n(const void *a, const void *b, void* _);
 void str_tolower(char *s);
 
 
-#define PTHREAD_NUM 32
+#define PTHREAD_NUM 1
 
 typedef struct thread_params_t
 {
@@ -76,7 +76,7 @@ int main(void)
 	
 	if(tokenized_training_data.length == 0)
 	{
-		generate_tokens(&tokens, &token_indices, "libro_test.txt");
+		generate_tokens(&tokens, &token_indices, "libro.txt");
 	
 		dictionary = array_create(100, sizeof(char));
 		dictionary_indices = array_create(100, sizeof(int));
@@ -392,11 +392,13 @@ void generate_tokens(array_t* tokens, array_t* token_indices, char* training_dat
 				&& file_content[i] != '\n' 
 				&& file_content[i] != '\r' 
 				&& file_content[i] != '.' 
-				&& file_content[i] != '?' 
+				/*&& file_content[i] != '?' 
 				&& file_content[i] != ',' 
 				&& file_content[i] != ';'
 				&& file_content[i] != '"'
-				&& file_content[i] != ':')
+				&& file_content[i] != ':'
+				*/
+				)
 			{
 				if(first_char)
 				{
