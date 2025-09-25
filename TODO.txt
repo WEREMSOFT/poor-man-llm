@@ -1,3 +1,1 @@
-* Make text search case insensitive (all lowercase and maybe semantic rules apply)
-* When creating the phrase, don't let a space between tokens like "." and ",".
 

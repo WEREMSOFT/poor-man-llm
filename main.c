@@ -759,7 +759,7 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 	node_t *actual_node;
 	bool should_continue = true;
 	char *word;
-
+	bool first_loop = true;
 	srand((unsigned int)time(NULL));
 
 	for(i = 0; i < NODE_NUM_PARAM; i++)
@@ -788,24 +788,42 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 
 	actual_node = array_get_element_at(graph, *index);
 
+#define _PRINT_STARTER_TOKENS
+#ifdef PRINT_STARTER_TOKENS
 	for(i = 0; i < NODE_NUM_PARAM; i++)
 	{
 		word = &((char *)dictionary.data)[actual_node->key[i]];
-		printf("%s ", word);
-		fflush(stdout);
+		if(strcmp(word, ".") != 0)
+		{
+			printf(" ");
+		}
+		printf("%s", word);
 	}
-
+	fflush(stdout);
+#endif
 	while(should_continue)
 	{
 		random_index = rand() % actual_node->children.length;
 		index = array_get_element_at(actual_node->children, random_index);
 		actual_node = get_node_by_key(graph, index);
 		word = &((char *)dictionary.data)[actual_node->key[NODE_NUM_PARAM - 1]];
-		if(strcmp(word, ".") == 0)
+
+		if(!first_loop)
 		{
-			should_continue = false;
+			if(strcmp(word, ".") == 0)
+			{
+				should_continue = false;
+			} else 
+			{
+				printf(" ");
+			}
+		} else {
+			first_loop = false;
+			if(strcmp(word, ".") == 0)
+				continue;						
 		}
-		printf("%s ", word);
+			
+		printf("%s", word);
 		fflush(stdout);
 	}
 	printf("\n");
