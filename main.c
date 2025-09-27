@@ -10,6 +10,8 @@
 #include <pthread.h>
 #include <ctype.h>
 
+#include "lzw-compression/lzw-compression.h"
+
 #define __ARRAY_T_IMPLEMENTATION__
 #include "array_t/array_t.h"
 #include "node_t/node_t.h"
@@ -28,9 +30,10 @@ void print_word(array_t tokens, int index);
 int compar_graph_keys(const void *a, const void *b);
 int compar_graph_keys_n(const void *a, const void *b, void* _);
 void str_tolower(char *s);
+bool is_prase_end(char token);
+void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int start, int end);
 
-
-#define PTHREAD_NUM 1
+#define PTHREAD_NUM 6
 
 typedef struct thread_params_t
 {
@@ -122,7 +125,7 @@ int main(void)
         /* check case-insensitive exit */
         strcpy(tmp, buffer);
         str_tolower(tmp);
-        if (strcmp(tmp, "bye") == 0) {
+        if (strcmp(tmp, "bye") == 0 || *tmp == 'q') {
             break;
         }
 
@@ -200,6 +203,11 @@ void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int sta
 			array_append_element(&parent_node_p->children, &actual_node.key);
 		}
 	}
+}
+
+bool is_phrase_end(char token)
+{
+	return (token == '.' || token == '?'); 
 }
 
 void *build_graph_slice(void *params)
@@ -358,7 +366,6 @@ void generate_tokens(array_t* tokens, array_t* token_indices, char* training_dat
 		bool first_char = true;
 		char null_char = 0;
 	
-	
 		*tokens = array_create(1000, sizeof(char));
 		*token_indices = array_create(1000, sizeof(int));
 		
@@ -392,8 +399,8 @@ void generate_tokens(array_t* tokens, array_t* token_indices, char* training_dat
 				&& file_content[i] != '\n' 
 				&& file_content[i] != '\r' 
 				&& file_content[i] != '.' 
-				&& file_content[i] != '?' 
 				/*
+				&& file_content[i] != '?' 
 				&& file_content[i] != ',' 
 				&& file_content[i] != ';'
 				&& file_content[i] != '"'
@@ -412,7 +419,7 @@ void generate_tokens(array_t* tokens, array_t* token_indices, char* training_dat
 			} else {
 				first_char = true;
 
-				if(file_content[i] == '.' || file_content[i] == '?')
+				if(is_phrase_end(file_content[i]))
 				{
 					array_append_element(tokens, &null_char);
 					lower_case_token = tolower(file_content[i]);
@@ -793,7 +800,7 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 	for(i = 0; i < NODE_NUM_PARAM; i++)
 	{
 		word = &((char *)dictionary.data)[actual_node->key[i]];
-		if(strcmp(word, ".") != 0)
+		if(is_phrase_end(*word))
 		{
 			printf(" ");
 		}
@@ -807,14 +814,10 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 		index = array_get_element_at(actual_node->children, random_index);
 		actual_node = get_node_by_key(graph, index);
 		word = &((char *)dictionary.data)[actual_node->key[NODE_NUM_PARAM - 1]];
-		if(word == '.')
-		{
-			printf("The word %s is .\n", word);
-		}
 
 		if(!first_loop)
 		{
-			if(strcmp(word, ".") == 0 || strcmp(word, "?") == 0)
+			if(is_phrase_end(*word))
 			{
 				should_continue = false;
 			} else 
@@ -823,12 +826,11 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 			}
 		} else {
 			first_loop = false;
-			if(strcmp(word, ".") == 0 || strcmp(word, "?") == 0)
+			if(is_phrase_end(*word))
 				continue;						
 		}
 			
 		printf("%s", word);
-		fflush(stdout);
 	}
 	printf("\n");
 }

@@ -25,6 +25,7 @@ int array_save_to_disk(array_t array, char* file_name);
 array_t array_load_from_disk(char* file_name);
 array_t array_destroy(array_t array);
 void *array_search_element(struct array_t array, void *key, int (*compar)(const void *, const void *));
+void array_reset(struct array_t *that);
 
 #ifndef ARRAY_MALLOC
 #define ARRAY_MALLOC malloc
@@ -217,6 +218,12 @@ void* array_insert_element_in_order(struct array_t *that, void *element, int (*c
 void *array_search_element(struct array_t array, void *key, int (*compar)(const void *, const void *))
 {
 	return bsearch(key, array.data, array.length, array.element_size, compar);
+}
+
+void array_reset(struct array_t *that)
+{
+	memset(that->data, 0, that->length);
+	that->length = 0;
 }
 #endif
 #endif

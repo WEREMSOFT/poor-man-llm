@@ -1,2 +1,2 @@
-* put all characters that works as a phrase terminator in an array and test them all in the same way. Characters like . or ?
-* check if string comparision can be avoided when comparing single characters.
+* hacer que cuando hago una pregunta, devuelva la entrada mas aproximada.
+* hacer que la construccion del diccionario se haga con el algoritmo lzw.
