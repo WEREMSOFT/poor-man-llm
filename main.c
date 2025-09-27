@@ -139,7 +139,6 @@ int main(void)
         array_destroy(words);
     }
 
-
 	stopwatch_wall_clock_stop();
 
 	return 0;
@@ -393,7 +392,8 @@ void generate_tokens(array_t* tokens, array_t* token_indices, char* training_dat
 				&& file_content[i] != '\n' 
 				&& file_content[i] != '\r' 
 				&& file_content[i] != '.' 
-				/*&& file_content[i] != '?' 
+				&& file_content[i] != '?' 
+				/*
 				&& file_content[i] != ',' 
 				&& file_content[i] != ';'
 				&& file_content[i] != '"'
@@ -412,7 +412,7 @@ void generate_tokens(array_t* tokens, array_t* token_indices, char* training_dat
 			} else {
 				first_char = true;
 
-				if(file_content[i] == '.')
+				if(file_content[i] == '.' || file_content[i] == '?')
 				{
 					array_append_element(tokens, &null_char);
 					lower_case_token = tolower(file_content[i]);
@@ -807,10 +807,14 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 		index = array_get_element_at(actual_node->children, random_index);
 		actual_node = get_node_by_key(graph, index);
 		word = &((char *)dictionary.data)[actual_node->key[NODE_NUM_PARAM - 1]];
+		if(word == '.')
+		{
+			printf("The word %s is .\n", word);
+		}
 
 		if(!first_loop)
 		{
-			if(strcmp(word, ".") == 0)
+			if(strcmp(word, ".") == 0 || strcmp(word, "?") == 0)
 			{
 				should_continue = false;
 			} else 
@@ -819,7 +823,7 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 			}
 		} else {
 			first_loop = false;
-			if(strcmp(word, ".") == 0)
+			if(strcmp(word, ".") == 0 || strcmp(word, "?") == 0)
 				continue;						
 		}
 			
