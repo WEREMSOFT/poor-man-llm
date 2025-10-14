@@ -38,6 +38,29 @@ void array_reset(struct array_t *that);
 #ifdef __ARRAY_T_IMPLEMENTATION__
 #undef __ARRAY_T_IMPLEMENTATION__
 
+array_t array_create_from_string(char *c_string)
+{
+    size_t size = strlen(c_string);
+    array_t array = {0};
+    
+	array.length = 0;
+	array.capacity = size;
+	array.element_size = sizeof(char);
+	
+	array.data =  ARRAY_MALLOC(size);
+
+    if (!array.data)
+    {
+        printf("Error allocation memory for Universalarray_t %s::%d\n", __FILE__, __LINE__);
+        exit(-1);
+    }
+
+	memset(array.data, 0, size);
+	strcpy(array.data, c_string);
+
+    return array;
+}
+
 array_t array_create(int initialCapacity, size_t elementSize)
 {
     size_t size = elementSize * initialCapacity;

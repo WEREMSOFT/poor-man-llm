@@ -21,7 +21,7 @@ node_t* get_node_by_key(array_t graph, int key[NODE_NUM_PARAM]);
 void generate_tokens(array_t* tokens, array_t* token_indices, char* training_data_filename);
 void generate_dictionary(array_t *dictionary, array_t *dictionary_indices, array_t tokens, array_t token_indices);
 void generate_training_data(array_t *training_data, array_t dictionary, array_t dictionary_indices, array_t tokens, array_t token_indices);
-void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t dictionary_indices);
+void generate_phrase(array_t words, array_t graph, array_t dictionary);
 array_t build_graph_threaded(array_t tokenized_training_data, array_t tokens);
 void save_graph(array_t graph);
 array_t load_graph();
@@ -32,8 +32,10 @@ int compar_graph_keys_n(const void *a, const void *b, void* _);
 void str_tolower(char *s);
 bool is_prase_end(char token);
 void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int start, int end);
+void lzw_tokenization(array_t *dictionary, array_t *compressed_string, char* training_data_filename);
+void print_compressed_string(array_t compressed_array, array_t dictionary);
 
-#define PTHREAD_NUM 6
+#define PTHREAD_NUM 18
 
 typedef struct thread_params_t
 {
@@ -56,11 +58,8 @@ array_t dic;
 int main(void)
 {
 	array_t graph = {0};
-	array_t tokens = {0};	
-	array_t token_indices = {0};
 
 	array_t dictionary = {0};
-	array_t dictionary_indices = {0};
 
 	array_t tokenized_training_data = {0};
 
@@ -73,24 +72,27 @@ int main(void)
 
 	stopwatch_wall_clock_start("LLM Training");
 
+
 	dictionary = array_load_from_disk("model_data/dictionary.arr");
 	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
-	dictionary_indices = array_load_from_disk("model_data/dictionary_indices.arr");
 	
 	if(tokenized_training_data.length == 0)
 	{
-		generate_tokens(&tokens, &token_indices, "libro.txt");
-	
+		lzw_tokenization(&dictionary, &tokenized_training_data, "libro_test.txt");
+		/*
+		generate_tokens(&_tokens, &token_indices, "libro.txt");
+		
 		dictionary = array_create(100, sizeof(char));
 		dictionary_indices = array_create(100, sizeof(int));
-	
-		generate_dictionary(&dictionary, &dictionary_indices, tokens, token_indices);
-	
+		
+		generate_dictionary(&dictionary, &dictionary_indices, _tokens, token_indices);
+		
 		tokenized_training_data = array_create(100, sizeof(int));
-		generate_training_data(&tokenized_training_data, dictionary, dictionary_indices, tokens, token_indices);
+		generate_training_data(&tokenized_training_data, dictionary, dictionary_indices, _tokens, token_indices);
+		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
+		*/
 		array_save_to_disk(dictionary, "model_data/dictionary.arr");
 		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
-		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
 	}
 	
 	dic = dictionary;
@@ -131,13 +133,17 @@ int main(void)
 
         words = array_create(8, sizeof(char*));
 
+		words = lzw_compress(buffer, &dictionary, false);
+		print_compressed_string(words, dictionary);
+		/*
         token = strtok(tmp, delim);
         while (token != NULL) {
             array_append_element(&words, token);
             token = strtok(NULL, delim);
         }
+		*/
 
-        generate_phrase(words, graph, dictionary, dictionary_indices);
+        generate_phrase(words, graph, dictionary);
 
         array_destroy(words);
     }
@@ -145,6 +151,58 @@ int main(void)
 	stopwatch_wall_clock_stop();
 
 	return 0;
+}
+
+void print_compressed_string(array_t compressed_array, array_t dictionary)
+{
+	int i, *element;
+	array_t *dictionary_entry;
+	char decompressed_string[2048] = {0};
+	printf("\nDecompressed string\n");
+	for(i = 0; i < compressed_array.length; i++)
+	{
+		element = array_get_element_at(compressed_array, i);
+		dictionary_entry = array_get_element_at(dictionary, *element);
+		strcat(decompressed_string, (char *)dictionary_entry->data);
+		printf("%s", (char *)dictionary_entry->data);
+	}
+	printf("\n");
+}
+
+void lzw_tokenization(array_t *dictionary, array_t *compressed_string, char* training_data_filename)
+{
+		char *file_content;
+		int fd;
+		struct stat sb;
+
+		fd = open(training_data_filename, O_RDONLY);
+
+		if(fd == -1)
+		{
+			perror("Error al abrir archivo\n");
+			return;
+		}
+
+		if(fstat(fd, &sb) == -1)
+		{
+			perror("error al obtener el tamanio del archivo\n");
+			close(fd);
+			return;
+		}
+
+		file_content = (char *) mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+		if(file_content == MAP_FAILED)
+		{
+			perror("error al mapear el archivo\n");
+			close(fd);
+			return;
+		}
+
+		*compressed_string = lzw_compress(file_content, dictionary, true);
+
+		munmap(file_content, sb.st_size);
+		close(fd);
 }
 
 void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int start, int end)
@@ -759,13 +817,14 @@ void print_nodes_by_indexes(array_t graph, array_t tokens, array_t indices)
 	}
 }
 
-void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t dictionary_indices)
+void generate_phrase(array_t words, array_t graph, array_t dictionary)
 {
 	int i, ii, keys[NODE_NUM_PARAM] = {0}, random_index, *index;
 	array_t posible_initial_nodes = {0};
 	node_t *actual_node;
 	bool should_continue = true;
 	char *word;
+	int *compressed_word;
 	bool first_loop = true;
 	srand((unsigned int)time(NULL));
 
@@ -777,7 +836,8 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 	ii = 0;
 	for(i = words.length < NODE_NUM_PARAM ? 0 : (words.length - NODE_NUM_PARAM); i < words.length; i++)
 	{
-		keys[ii] = get_dictionary_index(&dictionary, &dictionary_indices, array_get_element_at(words, i));
+		compressed_word = array_get_element_at(words, i);
+		keys[ii] = *compressed_word;
 		ii++;
 	}
 	
@@ -795,7 +855,7 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 
 	actual_node = array_get_element_at(graph, *index);
 
-#define _PRINT_STARTER_TOKENS
+#define PRINT_STARTER_TOKENS
 #ifdef PRINT_STARTER_TOKENS
 	for(i = 0; i < NODE_NUM_PARAM; i++)
 	{
@@ -804,7 +864,7 @@ void generate_phrase(array_t words, array_t graph, array_t dictionary, array_t d
 		{
 			printf(" ");
 		}
-		printf("%s", word);
+		printf("%s ", word);
 	}
 	fflush(stdout);
 #endif
