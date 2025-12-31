@@ -60,8 +60,10 @@ int main(void)
 	array_t graph = {0};
 
 	array_t dictionary = {0};
+	array_t dictionary_saved = {0};
 
 	array_t tokenized_training_data = {0};
+	array_t tokenized_training_data_saved = {0};
 
 	array_t words = {0};
 
@@ -72,11 +74,10 @@ int main(void)
 
 	stopwatch_wall_clock_start("LLM Training");
 
-
-	dictionary = array_load_from_disk("model_data/dictionary.arr");
-	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
+	dictionary_saved = array_load_from_disk("model_data/dictionary.arr");
+	tokenized_training_data_saved = array_load_from_disk("model_data/tokenized_training_data.arr");
 	
-	if(tokenized_training_data.length == 0)
+	// if(tokenized_training_data.length == 0)
 	{
 		lzw_tokenization(&dictionary, &tokenized_training_data, "libro_test.txt");
 		/*
@@ -95,6 +96,8 @@ int main(void)
 		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
 	}
 	
+	print_compressed_string(tokenized_training_data, dictionary);
+
 	dic = dictionary;
 
 	graph = load_graph();

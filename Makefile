@@ -2,24 +2,26 @@ ifdef ENABLE_MULTI
     CFLAGS += -DMULTI
 endif
 
+CSTD = -std=c99
+
 all: build
 	./main.bin
 
 run_multi: clean
-	gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+	gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic $(CSTD) -lpthread main.c -o main.bin
 	./main.bin
 
 build_vscode: clean
-	gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+	gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic $(CSTD) -lpthread main.c -o main.bin
 
 build: clean
-	gcc $(CFLAGS) -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+	gcc $(CFLAGS) -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic $(CSTD) -lpthread main.c -o main.bin
 
 build_multi: clean
-	gcc -DMULTI -O0 -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic -std=c89 -lpthread main.c -o main.bin
+	gcc -DMULTI -O0 -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic $(CSTD) -lpthread main.c -o main.bin
 
 build_release: clean
-	gcc -DMULTI -O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG -std=c89 -lpthread main.c -o main.bin
+	gcc -DMULTI -O3 -march=native -flto -fno-exceptions -fomit-frame-pointer -DNDEBUG $(CSTD) -lpthread main.c -o main.bin
 
 run_release: clean clean_data build_release
 	./main.bin the man
