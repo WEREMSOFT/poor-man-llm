@@ -36,6 +36,7 @@ array_t lzw_compress(char* input_string, array_t *dictionary, bool grow_dictiona
 	output_string_arr = array_create(in_strlen, sizeof(int));
 	current_sequence = array_create(10, sizeof(char));
 	
+	// If the dictionary is not initialized. Add all letters in the alphabet.
 	if(dictionary->capacity == 0)
 	{
 		*dictionary = array_create(256, sizeof(array_t));
@@ -48,6 +49,7 @@ array_t lzw_compress(char* input_string, array_t *dictionary, bool grow_dictiona
 		}
 	}
 
+	// Process the string to compress.
 	for(i = 0; i < in_strlen; i++)
 	{
 		current_char = tolower(input_string[i]);

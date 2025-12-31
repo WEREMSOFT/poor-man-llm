@@ -34,6 +34,9 @@ bool is_prase_end(char token);
 void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int start, int end);
 void lzw_tokenization(array_t *dictionary, array_t *compressed_string, char* training_data_filename);
 void print_compressed_string(array_t compressed_array, array_t dictionary);
+void save_lzw_dictionary(array_t dictionary);
+array_t load_lzw_dictionary();
+
 
 #define PTHREAD_NUM 18
 
@@ -74,10 +77,14 @@ int main(void)
 
 	stopwatch_wall_clock_start("LLM Training");
 
-	dictionary_saved = array_load_from_disk("model_data/dictionary.arr");
-	tokenized_training_data_saved = array_load_from_disk("model_data/tokenized_training_data.arr");
-	
-	// if(tokenized_training_data.length == 0)
+	dictionary = load_lzw_dictionary();
+	tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
+
+	// print_compressed_string(tokenized_training_data_saved, dictionary_saved);
+	// dictionary = array_load_from_disk("model_data/dictionary.arr");
+	// tokenized_training_data = array_load_from_disk("model_data/tokenized_training_data.arr");
+
+	if(tokenized_training_data.length == 0)
 	{
 		lzw_tokenization(&dictionary, &tokenized_training_data, "libro_test.txt");
 		/*
@@ -92,11 +99,19 @@ int main(void)
 		generate_training_data(&tokenized_training_data, dictionary, dictionary_indices, _tokens, token_indices);
 		array_save_to_disk(dictionary_indices, "model_data/dictionary_indices.arr");
 		*/
-		array_save_to_disk(dictionary, "model_data/dictionary.arr");
+		save_lzw_dictionary(dictionary);
 		array_save_to_disk(tokenized_training_data, "model_data/tokenized_training_data.arr");
+
+		// print_compressed_string(tokenized_training_data, dictionary);
+		// print_compressed_string(tokenized_training_data_saved, dictionary_saved);
+
+		// dictionary_saved = load_lzw_dictionary();
+		// tokenized_training_data_saved = array_load_from_disk("model_data/tokenized_training_data.arr");
 	}
-	
+
 	print_compressed_string(tokenized_training_data, dictionary);
+	// print_compressed_string(tokenized_training_data_saved, dictionary_saved);
+	// print_compressed_string(tokenized_training_data_saved, dictionary);
 
 	dic = dictionary;
 
@@ -725,6 +740,46 @@ array_t get_nodes_by_key(array_t graph, int key[NODE_NUM_PARAM])
 	}
 
 	return nodes;
+}
+
+void save_lzw_dictionary(array_t dictionary)
+{
+	array_t *array_temp;
+	char file_name[500] = {0};
+	int i;
+
+	array_save_to_disk(dictionary, "model_data/dictionary.arr");
+	for( i = 0; i < dictionary.length; i++)
+	{
+		array_temp = array_get_element_at(dictionary, i);
+		sprintf(file_name, "model_data/dictionary_%d.arr", i);
+		array_save_to_disk(*array_temp, file_name);
+	}
+}
+
+array_t load_lzw_dictionary()
+{
+	int i;
+	array_t dictionary;
+	array_t *array_temp;
+	char file_name[500];
+
+	dictionary = array_load_from_disk("model_data/dictionary.arr");
+
+	printf("Loading LZW dictionary...\n");
+
+	if(dictionary.length != 0)
+	{
+		for( i = 0; i < dictionary.length; i++)
+		{
+			printf("%.2f%%\r", ((float)i / (float)dictionary.length) * 100.);
+			array_temp = array_get_element_at(dictionary, i);
+			sprintf(file_name, "model_data/dictionary_%d.arr", i);
+			*array_temp = array_load_from_disk(file_name);
+		}
+	}
+	printf("%.2f%%\r", ((float)i / (float)dictionary.length) * 100.);
+	return dictionary;
 }
 
 array_t load_graph()
