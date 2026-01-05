@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Debug C99 (build_vscode)",
+    "type": "gdb",
+    "request": "launch",
+    "program": "${workspaceRoot}/main.bin",
+    "args": [],
+    "cwd": "${workspaceRoot}",
+    "preLaunchTask": "build_vscode",
+    "stopAtEntry": false,
+  },
+  {
+    "label": "Debug native binary",
+    "build": {
+      "command": "make build_vscode",
+      "args": ["-j8"],
+      "cwd": "$ZED_WORKTREE_ROOT",
+    },
+    "program": "$ZED_WORKTREE_ROOT/main.bin",
+    "request": "launch",
+    "adapter": "CodeLLDB",
+  },
+]

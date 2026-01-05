@@ -105,6 +105,8 @@ int main(void)
 		save_graph(graph);
 	}
 
+	print_graph(graph, tokenized_training_data);
+
 	for (;;) {
         printf("Enter a phrase (type 'Bye' to quit): ");
         if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
@@ -189,21 +191,18 @@ void lzw_tokenization(array_t *dictionary, array_t *compressed_string, char* tra
 
 void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int start, int end)
 {
-	int i, j, *training_token, parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
-	node_t actual_node = {0}, parent_node = {0}, *parent_node_p, *actual_node_p;
+	int parent_key[NODE_NUM_PARAM] = {0}, actual_key[NODE_NUM_PARAM] = {0};
 
-	/*
-	uninitialized
-	*/ 
+	// uninitialized
 	parent_key[0] = -1;
 
-	for(i = start; i < end; i++)
+	for(int i = start; i < end; i++)
 	{
-		actual_node = node_create();
+		node_t actual_node = node_create();
 
-		for(j = 0; j < NODE_NUM_PARAM; j++)
+		for(int j = 0; j < NODE_NUM_PARAM; j++)
 		{
-			training_token = array_get_element_at(tokenized_training_data, i + j);
+			int* training_token = array_get_element_at(tokenized_training_data, i + j);
 			
 			if(training_token == NULL) 
 				return;
@@ -218,7 +217,7 @@ void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int sta
 			}
 		}
 
-		actual_node_p = get_node_by_key(*graph, actual_key);
+		node_t* actual_node_p = get_node_by_key(*graph, actual_key);
 
 		if(actual_node_p != NULL)
 		{
@@ -227,14 +226,14 @@ void build_graph_slice2(array_t *graph, array_t tokenized_training_data, int sta
 			array_insert_element_in_order(graph, &actual_node, compar_graph_keys_n);
 		}
 
-		parent_node_p = get_node_by_key(*graph, parent_key);
+		node_t* parent_node_p = get_node_by_key(*graph, parent_key);
 		if(parent_node_p != NULL)
 		{
 			array_append_element(&parent_node_p->children, &actual_node.key);
 		} else if(parent_key[0] != -1)
 		{
-			parent_node = node_create();
-			for(j = 0; j < NODE_NUM_PARAM; j++)
+			node_t parent_node = node_create();
+			for(int j = 0; j < NODE_NUM_PARAM; j++)
 			{
 				parent_node.key[j] = parent_key[j];
 			}

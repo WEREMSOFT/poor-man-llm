@@ -1,0 +1,14 @@
+[
+  {
+    "label": "build_vscode",
+    "command": "make",
+    "args": ["build_vscode"],
+    "cwd": ".",
+  },
+  {
+    "label": "clean",
+    "command": "make",
+    "args": ["clean"],
+    "cwd": ".",
+  },
+]

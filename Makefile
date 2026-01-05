@@ -12,7 +12,7 @@ run_multi: clean
 	./main.bin
 
 build_vscode: clean
-	gcc -DMULTI -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic $(CSTD) -lpthread main.c -o main.bin
+	gcc -g -Wunused -Wunreachable-code -Wall -Wextra -pedantic $(CSTD) -lpthread main.c -o main.bin
 
 build_vscode_clean_data: clean_data clean build_vscode
 
